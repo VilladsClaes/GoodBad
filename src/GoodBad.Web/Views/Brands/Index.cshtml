@@ -1,0 +1,43 @@
+@model List<Brand>
+@{
+    ViewData["Title"] = "Brands";
+}
+<h1 class="h2 mb-1">Brands og producenter</h1>
+<p class="text-muted">Hvem står bag produkterne? Klik ind og se hvordan deres produkter klarer sig.</p>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+    @foreach (var brand in Model)
+    {
+        <div class="col">
+            <div class="card h-100 product-card">
+                <div class="card-body d-flex flex-column">
+                    <div class="mb-2" style="height:48px">
+                        @if (!string.IsNullOrEmpty(brand.LogoUrl))
+                        {
+                            <img src="@brand.LogoUrl" class="brand-logo" alt="@brand.Name logo" />
+                        }
+                        else
+                        {
+                            <span class="fw-bold fs-5">@brand.Name</span>
+                        }
+                    </div>
+                    <h2 class="h6">
+                        <a class="text-decoration-none text-dark" asp-action="Details" asp-route-slug="@brand.Slug">@brand.Name</a>
+                    </h2>
+                    @if (!string.IsNullOrEmpty(brand.Country))
+                    {
+                        <div class="small text-muted">@brand.Country</div>
+                    }
+                    <p class="small text-muted mt-2">@brand.Description</p>
+                    <div class="mt-auto small">
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis">@brand.Products.Count produkter</span>
+                        @if (!string.IsNullOrEmpty(brand.WebsiteUrl))
+                        {
+                            <a class="ms-2" href="@brand.WebsiteUrl" target="_blank" rel="noopener nofollow">Hjemmeside ↗</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

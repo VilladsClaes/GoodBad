@@ -1,0 +1,42 @@
+@model ProductCard
+<div class="col">
+    <div class="card h-100 product-card">
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <a asp-controller="Products" asp-action="Details" asp-route-slug="@Model.Slug">
+                <img src="@Model.ImageUrl" class="card-img-top" alt="@Model.Name" loading="lazy" />
+            </a>
+        }
+        <div class="card-body d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start mb-1">
+                <a class="card-title h6 mb-0 text-decoration-none text-dark fw-semibold"
+                   asp-controller="Products" asp-action="Details" asp-route-slug="@Model.Slug">@Model.Name</a>
+                <span class="badge rounded-pill @Model.ScoreCssClass">@Model.Score.ToString("0")</span>
+            </div>
+            <div class="small text-muted mb-2">
+                @if (!string.IsNullOrEmpty(Model.BrandName))
+                {
+                    <a class="text-muted" asp-controller="Brands" asp-action="Details" asp-route-slug="@Model.BrandSlug">@Model.BrandName</a>
+                    <span>&middot;</span>
+                }
+                <a class="text-muted" asp-controller="Categories" asp-action="Details" asp-route-slug="@Model.CategorySlug">@Model.CategoryName</a>
+            </div>
+            <div class="mt-auto small">
+                @if (Model.ReviewCount == 0)
+                {
+                    <span class="text-muted">Ingen anmeldelser endnu</span>
+                }
+                else
+                {
+                    <span class="text-success fw-semibold">@Model.GoodCount kan lide</span>
+                    <span class="text-muted">/</span>
+                    <span class="text-danger fw-semibold">@Model.BadCount kan ikke lide</span>
+                }
+                @if (Model.IsRecommended)
+                {
+                    <div class="mt-1"><span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">GoodBad anbefaler</span></div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

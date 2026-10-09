@@ -1,0 +1,69 @@
+@model ProductCreateViewModel
+@{
+    ViewData["Title"] = "Tilføj produkt";
+    var categories = (List<CategoryPickerItem>)ViewBag.Categories;
+    var brands = (List<Brand>)ViewBag.Brands;
+}
+<h1 class="h2">Tilføj et produkt</h1>
+<p class="text-muted">Knyt produktet til den rigtige kategori og producent. Bagefter kan du skrive den første anmeldelse.</p>
+
+<div class="row">
+    <div class="col-lg-7">
+        <form asp-action="Create" method="post" class="card p-4">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" placeholder="Fx Nordvik Storm Regnjakke" />
+                <span asp-validation-for="Name" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="CategoryId" class="form-label"></label>
+                <select asp-for="CategoryId" class="form-select">
+                    <option value="">Vælg kategori…</option>
+                    @foreach (var item in categories)
+                    {
+                        <option value="@item.Id">@item.Label</option>
+                    }
+                </select>
+                <div class="form-text">Produktkategori er vigtig: det er her problemer og fixes bliver søgbare.</div>
+                <span asp-validation-for="CategoryId" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="BrandId" class="form-label"></label>
+                <select asp-for="BrandId" class="form-select">
+                    <option value="">Ukendt / ingen</option>
+                    @foreach (var brand in brands)
+                    {
+                        <option value="@brand.Id">@brand.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="ModelNumber" class="form-label"></label>
+                    <input asp-for="ModelNumber" class="form-control" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="ImageUrl" class="form-label"></label>
+                    <input asp-for="ImageUrl" class="form-control" placeholder="https://…" />
+                    <div class="form-text">Tag et billede af produktet og indsæt et link.</div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-success">Opret produkt</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

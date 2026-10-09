@@ -1,0 +1,56 @@
+@model ProductBrowseViewModel
+@{
+    ViewData["Title"] = "Produkter";
+}
+<div class="d-flex flex-wrap justify-content-between align-items-end mb-3 gap-2">
+    <div>
+        <h1 class="h2 mb-0">Produkter</h1>
+        <p class="text-muted mb-0">@Model.Products.Count produkter vist.</p>
+    </div>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <a class="btn btn-success" asp-action="Create">+ Tilføj produkt</a>
+    }
+</div>
+
+<form method="get" class="row g-2 align-items-end mb-4">
+    <div class="col-md-5">
+        <label class="form-label small text-muted mb-1">Søg</label>
+        <input class="form-control" type="search" name="q" value="@Model.Query" placeholder="Produkt eller brand" />
+    </div>
+    <div class="col-md-4">
+        <label class="form-label small text-muted mb-1">Kategori</label>
+        <select class="form-select" name="categoryId">
+            <option value="">Alle kategorier</option>
+            @foreach (var category in Model.Categories)
+            {
+                <option value="@category.Id" selected="@(Model.CategoryId == category.Id ? "selected" : null)">@category.Name</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label small text-muted mb-1">Sortér</label>
+        <select class="form-select" name="sort">
+            <option value="" selected="@(string.IsNullOrEmpty(Model.Sort) ? "selected" : null)">Mest anmeldt</option>
+            <option value="recommended" selected="@(Model.Sort == "recommended" ? "selected" : null)">Anbefalede</option>
+            <option value="warnings" selected="@(Model.Sort == "warnings" ? "selected" : null)">Advarsler</option>
+        </select>
+    </div>
+    <div class="col-md-1">
+        <button class="btn btn-primary w-100" type="submit">Vis</button>
+    </div>
+</form>
+
+@if (Model.Products.Any())
+{
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+        @foreach (var card in Model.Products)
+        {
+            <partial name="_ProductCard" model="card" />
+        }
+    </div>
+}
+else
+{
+    <p class="text-muted">Ingen produkter matcher. Prøv en anden søgning, eller tilføj produktet selv.</p>
+}

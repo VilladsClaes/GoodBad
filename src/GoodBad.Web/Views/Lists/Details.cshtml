@@ -1,0 +1,72 @@
+@model ListDetailsViewModel
+@{
+    ViewData["Title"] = Model.List.Name;
+    var cards = Model.Products.ToDictionary(c => c.Id);
+}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Forside</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Lister</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@Model.List.Name</li>
+    </ol>
+</nav>
+
+<h1 class="h2">@Model.List.Name</h1>
+<p class="text-muted">@Model.List.Description</p>
+<div class="mb-4">
+    @if (Model.List.IsEditorial)
+    {
+        <span class="badge bg-success-subtle text-success-emphasis">GoodBad udvalgt</span>
+    }
+    else if (Model.List.Owner is not null)
+    {
+        <span class="badge bg-light text-muted">Lavet af @(Model.List.Owner.DisplayName ?? Model.List.Owner.Email)</span>
+    }
+    @if (Model.List.Category is not null)
+    {
+        <a class="badge bg-primary-subtle text-primary-emphasis text-decoration-none"
+           asp-controller="Categories" asp-action="Details" asp-route-slug="@Model.List.Category.Slug">@Model.List.Category.Name</a>
+    }
+</div>
+
+@if (Model.Items.Any())
+{
+    <ol class="list-group list-group-numbered mb-4">
+        @foreach (var item in Model.Items)
+        {
+            var card = cards.TryGetValue(item.ProductId, out var c) ? c : null;
+            <li class="list-group-item d-flex justify-content-between align-items-start gap-3">
+                <div>
+                    <a class="fw-semibold" asp-controller="Products" asp-action="Details" asp-route-slug="@item.Product.Slug">@item.Product.Name</a>
+                    @if (item.Product.Brand is not null)
+                    {
+                        <span class="text-muted small">· @item.Product.Brand.Name</span>
+                    }
+                    @if (!string.IsNullOrEmpty(item.Note))
+                    {
+                        <div class="small text-muted">@item.Note</div>
+                    }
+                </div>
+                @if (card is not null)
+                {
+                    <span class="badge rounded-pill @card.ScoreCssClass">@card.Score.ToString("0")</span>
+                }
+            </li>
+        }
+    </ol>
+}
+else
+{
+    <p class="text-muted">Listen er tom endnu.</p>
+}
+
+<h2 class="h5">Produkter på listen</h2>
+@if (Model.Products.Any())
+{
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+        @foreach (var card in Model.Products)
+        {
+            <partial name="_ProductCard" model="card" />
+        }
+    </div>
+}

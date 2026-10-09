@@ -1,0 +1,67 @@
+@model BrandDetailsViewModel
+@{
+    ViewData["Title"] = Model.Brand.Name;
+    var brand = Model.Brand;
+}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Forside</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Brands</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@brand.Name</li>
+    </ol>
+</nav>
+
+<div class="d-flex align-items-center gap-3 flex-wrap mb-3">
+    @if (!string.IsNullOrEmpty(brand.LogoUrl))
+    {
+        <img src="@brand.LogoUrl" class="brand-logo" alt="@brand.Name logo" />
+    }
+    <div>
+        <h1 class="h2 mb-0">@brand.Name</h1>
+        <div class="text-muted">
+            @if (!string.IsNullOrEmpty(brand.Country))
+            {
+                <span>@brand.Country</span>
+            }
+            @if (!string.IsNullOrEmpty(brand.WebsiteUrl))
+            {
+                <span>· </span><a href="@brand.WebsiteUrl" target="_blank" rel="noopener nofollow">@brand.WebsiteUrl ↗</a>
+            }
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(brand.Description))
+{
+    <p>@brand.Description</p>
+}
+
+<div class="d-flex gap-3 mb-4">
+    <div class="stat-pill border rounded p-3">
+        <strong>@Model.AverageScore.ToString("0.0")</strong>
+        <span class="small text-muted">gennemsnitlig score (0-100)</span>
+    </div>
+    <div class="stat-pill border rounded p-3">
+        <strong class="text-success">@Model.GoodCount</strong>
+        <span class="small text-muted">kan lide</span>
+    </div>
+    <div class="stat-pill border rounded p-3">
+        <strong class="text-danger">@Model.BadCount</strong>
+        <span class="small text-muted">kan ikke lide</span>
+    </div>
+</div>
+
+<h2 class="h4">Produkter fra @brand.Name</h2>
+@if (Model.Products.Any())
+{
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+        @foreach (var card in Model.Products)
+        {
+            <partial name="_ProductCard" model="card" />
+        }
+    </div>
+}
+else
+{
+    <p class="text-muted">Ingen produkter registreret for dette brand endnu.</p>
+}

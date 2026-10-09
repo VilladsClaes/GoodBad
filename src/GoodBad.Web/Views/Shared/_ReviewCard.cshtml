@@ -1,0 +1,92 @@
+@model Review
+@{
+    var isGood = Model.Verdict == Verdict.Good;
+    var userVote = (bool?)ViewData["UserVote"];
+    var isAuthenticated = (bool)(ViewData["IsAuthenticated"] ?? false);
+    var userAspectVotes = (HashSet<int>?)ViewData["UserAspectVotes"] ?? new HashSet<int>();
+}
+<div class="card mb-3 review-card @(isGood ? "review-good" : "review-bad")">
+    <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2">
+            <div>
+                <span class="badge @(isGood ? "bg-success" : "bg-danger")">@(isGood ? "Kan lide" : "Kan ikke lide")</span>
+                <strong class="ms-1">@Model.Title</strong>
+            </div>
+            <div class="small text-muted text-end">
+                @(Model.User?.DisplayName ?? Model.User?.Email ?? "Anonym")
+                @if (!string.IsNullOrEmpty(Model.OwnershipDuration))
+                {
+                    <span>&middot; brugt i @Model.OwnershipDuration</span>
+                }
+                <div>@Model.CreatedAt.ToLocalTime().ToString("d. MMM yyyy")</div>
+            </div>
+        </div>
+
+        <p class="mt-2 mb-3" style="white-space: pre-line">@Model.Body</p>
+
+        @if (Model.Aspects.Any())
+        {
+            <div class="mb-3">
+                @foreach (var ra in Model.Aspects)
+                {
+                    var votes = ra.Votes.Count;
+                    var hasVoted = userAspectVotes.Contains(ra.Id);
+                    <span class="aspect-chip @(ra.Aspect.Kind == AspectKind.Problem ? "aspect-problem" : "aspect-praise")">
+                        @ra.Aspect.Text
+                    </span>
+                    <form asp-controller="Reviews" asp-action="VoteAspect" method="post" class="d-inline">
+                        <input type="hidden" name="id" value="@ra.Id" />
+                        <button type="submit"
+                                class="btn btn-sm py-0 @(hasVoted ? "btn-success" : "btn-outline-secondary")"
+                                title="Det problem har jeg også"
+                                @(isAuthenticated ? "" : "disabled")>
+                            Det problem har jeg også@(votes > 0 ? $" ({votes})" : "")
+                        </button>
+                    </form>
+                }
+            </div>
+        }
+
+        <div class="d-flex flex-wrap gap-3 align-items-center small">
+            <span class="text-muted">@(Model.Votes.Count(v => v.IsAgree)) enige i at produktet er @(isGood ? "godt" : "dårligt")</span>
+            <form asp-controller="Reviews" asp-action="Vote" method="post" class="d-inline">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <input type="hidden" name="agree" value="@(userVote == true ? "false" : "true")" />
+                <button type="submit" class="btn btn-sm @(userVote == true ? "btn-success" : "btn-outline-success")" @(isAuthenticated ? "" : "disabled")>
+                    @(userVote == true ? "Du er enig ✓" : "Jeg er enig")
+                </button>
+            </form>
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#fix-form-@Model.Id">
+                Foreslå et fix
+            </button>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <form asp-controller="Reviews" asp-action="RefreshSuggestions" method="post" class="d-inline">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-sm btn-link p-0">Find systemforslag</button>
+                </form>
+            }
+        </div>
+
+        <div class="collapse mt-3" id="fix-form-@Model.Id">
+            <form asp-controller="Fixes" asp-action="Create" method="post" class="border rounded p-3 bg-light">
+                <input type="hidden" name="productId" value="@Model.ProductId" />
+                <input type="hidden" name="reviewId" value="@Model.Id" />
+                <div class="mb-2">
+                    <input name="title" class="form-control form-control-sm" placeholder="Kort titel på fixet" required />
+                </div>
+                <div class="mb-2">
+                    <textarea name="body" class="form-control form-control-sm" rows="2" placeholder="Hvordan løser man problemet?" required></textarea>
+                </div>
+                <div class="mb-2">
+                    <input name="sourceUrl" class="form-control form-control-sm" placeholder="Link til guide/video (valgfrit)" />
+                </div>
+                <button type="submit" class="btn btn-sm btn-primary" @(isAuthenticated ? "" : "disabled")>Del fix</button>
+                @if (!isAuthenticated)
+                {
+                    <span class="small text-muted ms-2">Log ind for at bidrage</span>
+                }
+            </form>
+        </div>
+    </div>
+</div>

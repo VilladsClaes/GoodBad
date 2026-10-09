@@ -1,0 +1,146 @@
+@model HomeViewModel
+@{
+    ViewData["Title"] = "Forsiden";
+}
+
+<section class="hero mb-5">
+    <h1 class="display-5">Stop med at købe crap.<br />Køb noget der holder.</h1>
+    <p class="lead mt-3">
+        GoodBad er fællesskabets dom over rigtige produkter. Tag et billede, sig om du kan lide det
+        eller ej – og fortæl <em>hvad</em> der er galt, eller hvorfor det er så godt. Vi fører det
+        videre til den rigtige produktkategori, så andre kan se det, følge det og finde et fix.
+    </p>
+    <div class="d-flex flex-wrap gap-3 mt-4">
+        <a asp-controller="Products" asp-action="Index" class="btn btn-success btn-lg">Se produkter</a>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a asp-controller="Products" asp-action="Create" class="btn btn-outline-light btn-lg">Tilføj et produkt</a>
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="Register" class="btn btn-outline-light btn-lg">Opret bruger</a>
+        }
+    </div>
+    <div class="d-flex flex-wrap gap-3 mt-4">
+        <div class="stat-pill"><strong>@Model.ProductCount</strong> produkter</div>
+        <div class="stat-pill"><strong>@Model.ReviewCount</strong> anmeldelser</div>
+        <div class="stat-pill"><strong>@Model.BrandCount</strong> brands</div>
+        <div class="stat-pill"><strong>@Model.ListCount</strong> indkøbslister</div>
+    </div>
+</section>
+
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-end mb-3">
+        <div>
+            <h2 class="h3 mb-0">GodBad anbefaler</h2>
+            <p class="text-muted mb-0">Produkter der holder, kan repareres og er værd at anskaffe.</p>
+        </div>
+        <a class="btn btn-sm btn-outline-secondary" asp-controller="Products" asp-action="Index" asp-route-sort="recommended">Se alle</a>
+    </div>
+    @if (Model.Recommended.Any())
+    {
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+            @foreach (var card in Model.Recommended)
+            {
+                <partial name="_ProductCard" model="card" />
+            }
+        </div>
+    }
+    else
+    {
+        <p class="text-muted">Ingen anbefalinger endnu.</p>
+    }
+</section>
+
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-end mb-3">
+        <div>
+            <h2 class="h3 mb-0">Pas på: kinabras og kort levetid</h2>
+            <p class="text-muted mb-0">Produkter som fællesskabet advarer imod &ndash; og hvad du bør købe i stedet.</p>
+        </div>
+        <a class="btn btn-sm btn-outline-secondary" asp-controller="Products" asp-action="Index" asp-route-sort="warnings">Se alle</a>
+    </div>
+    @if (Model.Warnings.Any())
+    {
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+            @foreach (var card in Model.Warnings)
+            {
+                <partial name="_ProductCard" model="card" />
+            }
+        </div>
+    }
+    else
+    {
+        <p class="text-muted">Ingen advarsler endnu.</p>
+    }
+</section>
+
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-end mb-3">
+        <div>
+            <h2 class="h3 mb-0">Peer-reviewed indkøbslister</h2>
+            <p class="text-muted mb-0">Tryk på en liste og få en indkøbsliste, som fællesskabet står bag.</p>
+        </div>
+        <a class="btn btn-sm btn-outline-secondary" asp-controller="Lists" asp-action="Index">Alle lister</a>
+    </div>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+        @foreach (var list in Model.Lists)
+        {
+            <div class="col">
+                <div class="card h-100 product-card">
+                    <div class="card-body">
+                        <h3 class="h6">
+                            <a class="text-decoration-none text-dark" asp-controller="Lists" asp-action="Details" asp-route-slug="@list.Slug">@list.Name</a>
+                        </h3>
+                        <p class="small text-muted mb-2">@list.Description</p>
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis">@list.Items.Count produkter</span>
+                        @if (list.IsEditorial)
+                        {
+                            <span class="badge bg-success-subtle text-success-emphasis">GoodBad udvalgt</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="mb-5">
+    <h2 class="h3 mb-3">Find produktkategorien</h2>
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+        @foreach (var category in Model.TopCategories)
+        {
+            <div class="col">
+                <a class="category-tile" asp-controller="Categories" asp-action="Details" asp-route-slug="@category.Slug">
+                    <div class="icon">@category.Icon</div>
+                    <div class="fw-semibold">@category.Name</div>
+                    <div class="small text-muted">@category.Description</div>
+                </a>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="mb-5">
+    <h2 class="h3 mb-3">Seneste anmeldelser</h2>
+    <div class="row row-cols-1 row-cols-md-2 g-3">
+        @foreach (var review in Model.LatestReviews)
+        {
+            <div class="col">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <span class="badge @(review.Verdict == Verdict.Good ? "bg-success" : "bg-danger")">
+                            @(review.Verdict == Verdict.Good ? "Kan lide" : "Kan ikke lide")
+                        </span>
+                        <strong class="ms-1">@review.Title</strong>
+                        <div class="small text-muted">
+                            om
+                            <a asp-controller="Products" asp-action="Details" asp-route-slug="@review.Product.Slug">@review.Product.Name</a>
+                        </div>
+                        <p class="small mt-2 mb-0">@(review.Body.Length > 180 ? review.Body.Substring(0, 180) + "…" : review.Body)</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>

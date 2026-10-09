@@ -1,0 +1,102 @@
+@model CategoryDetailsViewModel
+@{
+    ViewData["Title"] = Model.Category.Name;
+    var cat = Model.Category;
+}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Forside</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Kategorier</a></li>
+        @if (cat.Parent is not null)
+        {
+            <li class="breadcrumb-item"><a asp-action="Details" asp-route-slug="@cat.Parent.Slug">@cat.Parent.Name</a></li>
+        }
+        <li class="breadcrumb-item active" aria-current="page">@cat.Name</li>
+    </ol>
+</nav>
+
+<div class="d-flex align-items-center mb-3">
+    <span class="display-6 me-3">@cat.Icon</span>
+    <div>
+        <h1 class="h2 mb-0">@cat.Name</h1>
+        <p class="text-muted mb-0">@cat.Description</p>
+    </div>
+</div>
+
+@if (cat.Children.Any())
+{
+    <div class="mb-4">
+        @foreach (var child in cat.Children.OrderBy(c => c.Name))
+        {
+            <a class="badge bg-secondary-subtle text-secondary-emphasis text-decoration-none me-1 mb-1 p-2"
+               asp-action="Details" asp-route-slug="@child.Slug">@child.Name</a>
+        }
+    </div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h6 text-danger">Typiske problemer i denne kategori</h2>
+                <p class="small text-muted">Det her skriver folk oftest er galt. Brug det som tjekliste, inden du køber.</p>
+                <div>
+                    @foreach (var aspect in Model.Problems)
+                    {
+                        <span class="aspect-chip aspect-problem">@aspect.Text</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h6 text-success">Det er folk glade for</h2>
+                <p class="small text-muted">God kvalitet i denne kategori ser typisk sådan ud.</p>
+                <div>
+                    @foreach (var aspect in Model.Praises)
+                    {
+                        <span class="aspect-chip aspect-praise">@aspect.Text</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.Lists.Any())
+{
+    <h2 class="h5">Indkøbslister i @cat.Name</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-3 mb-4">
+        @foreach (var list in Model.Lists)
+        {
+            <div class="col">
+                <div class="card h-100 product-card"><div class="card-body">
+                    <a class="h6 text-decoration-none" asp-controller="Lists" asp-action="Details" asp-route-slug="@list.Slug">@list.Name</a>
+                    <div class="small text-muted">@list.Items.Count produkter</div>
+                </div></div>
+            </div>
+        }
+    </div>
+}
+
+<h2 class="h5">Produkter (@Model.Products.Count)</h2>
+@if (Model.Products.Any())
+{
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+        @foreach (var card in Model.Products)
+        {
+            <partial name="_ProductCard" model="card" />
+        }
+    </div>
+}
+else
+{
+    <p class="text-muted">Der er endnu ingen produkter i denne kategori.
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a asp-controller="Products" asp-action="Create">Tilføj det første</a>
+        }
+    </p>
+}

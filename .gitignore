@@ -1,0 +1,25 @@
+# ---- .NET -------------------------------------------------------------
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# ---- Local SQLite development database (do not commit) ----------------
+*.db
+*.db-shm
+*.db-wal
+App_Data/
+
+# ---- Publish output / secrets ----------------------------------------
+publish/
+*/publish/
+**/publish/
+appsettings.*.local.json
+secrets.json
+
+# ---- OS / editor ------------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+*.swp

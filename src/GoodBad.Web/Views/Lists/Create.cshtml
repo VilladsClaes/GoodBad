@@ -1,0 +1,39 @@
+@model ListCreateViewModel
+@{
+    ViewData["Title"] = "Ny liste";
+    var categories = (List<Category>)ViewBag.Categories;
+}
+<h1 class="h2">Opret en indkøbsliste</h1>
+<p class="text-muted">Saml de produkter du vil anbefale til fx &ldquo;værkstedet&rdquo; eller &ldquo;regntøj til børn&rdquo;. Andre kan bruge listen som indkøbsliste.</p>
+
+<div class="row">
+    <div class="col-lg-7">
+        <form asp-action="Create" method="post" class="card p-4">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" placeholder="Fx Værktøj til hobbyværkstedet" />
+                <span asp-validation-for="Name" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="CategoryId" class="form-label"></label>
+                <select asp-for="CategoryId" class="form-select">
+                    <option value="">Ingen kategori</option>
+                    @foreach (var category in categories)
+                    {
+                        <option value="@category.Id">@category.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            </div>
+            <button class="btn btn-success" type="submit">Opret liste</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

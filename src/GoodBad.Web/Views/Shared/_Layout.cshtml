@@ -1,0 +1,90 @@
+@{
+    var displayName = User.Identity?.IsAuthenticated == true
+        ? (User.FindFirst("DisplayName")?.Value ?? User.Identity!.Name)
+        : null;
+}
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - GoodBad</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+<header>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom box-shadow mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">
+                Good<span class="text-success">Bad</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="navbar-collapse collapse d-lg-inline-flex justify-content-between">
+                <ul class="navbar-nav flex-grow-1">
+                    <li class="nav-item"><a class="nav-link" asp-controller="Products" asp-action="Index">Produkter</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Categories" asp-action="Index">Kategorier</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Lists" asp-action="Index">Lister</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Brands" asp-action="Index">Brands</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="About">Om os</a></li>
+                </ul>
+                <form class="d-flex me-lg-3 my-2 my-lg-0" asp-controller="Products" asp-action="Index" method="get">
+                    <input class="form-control form-control-sm me-2" type="search" name="q" placeholder="Søg produkt eller brand" value="@Context.Request.Query["q"]" />
+                    <button class="btn btn-sm btn-outline-light" type="submit">Søg</button>
+                </form>
+                <ul class="navbar-nav">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-controller="Products" asp-action="Create">+ Produkt</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Lists" asp-action="Mine">Mine lister</a></li>
+                        <li class="nav-item">
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-link nav-link">Log ud</button>
+                            </form>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Login">Log ind</a></li>
+                        <li class="nav-item"><a class="btn btn-success btn-sm mt-1 ms-lg-2" asp-controller="Account" asp-action="Register">Opret bruger</a></li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+<main role="main" class="container pb-5">
+    @if (TempData["Success"] is string success)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @success
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] is string error)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @error
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @RenderBody()
+</main>
+
+<footer class="border-top footer text-muted py-4">
+    <div class="container d-flex flex-wrap justify-content-between">
+        <span>GoodBad &copy; @DateTime.Now.Year &ndash; køb bedre, køb sjældnere.</span>
+        <span>
+            <a asp-controller="Home" asp-action="About">Om GoodBad</a> &middot;
+            <a asp-controller="Home" asp-action="Privacy">Privatliv</a>
+        </span>
+    </div>
+</footer>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

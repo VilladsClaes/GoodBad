@@ -1,0 +1,53 @@
+@model List<ProductList>
+@{
+    ViewData["Title"] = "Indkøbslister";
+}
+<div class="d-flex flex-wrap justify-content-between align-items-end mb-3 gap-2">
+    <div>
+        <h1 class="h2 mb-0">Peer-reviewed indkøbslister</h1>
+        <p class="text-muted mb-0">En liste er en gennemprøvet indkøbsliste &ndash; lav din egen eller brug vores.</p>
+    </div>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <a class="btn btn-success" asp-action="Create">+ Ny liste</a>
+    }
+</div>
+
+@if (Model.Any())
+{
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+        @foreach (var list in Model)
+        {
+            <div class="col">
+                <div class="card h-100 product-card">
+                    <div class="card-body d-flex flex-column">
+                        <h2 class="h5">
+                            <a class="text-decoration-none text-dark" asp-action="Details" asp-route-slug="@list.Slug">@list.Name</a>
+                        </h2>
+                        <p class="small text-muted">@list.Description</p>
+                        <div class="mt-auto d-flex flex-wrap gap-1">
+                            <span class="badge bg-secondary-subtle text-secondary-emphasis">@list.Items.Count produkter</span>
+                            @if (list.IsEditorial)
+                            {
+                                <span class="badge bg-success-subtle text-success-emphasis">GoodBad udvalgt</span>
+                            }
+                            else if (list.Owner is not null)
+                            {
+                                <span class="badge bg-light text-muted">af @(list.Owner.DisplayName ?? list.Owner.Email)</span>
+                            }
+                            @if (list.Category is not null)
+                            {
+                                <a class="badge bg-primary-subtle text-primary-emphasis text-decoration-none"
+                                   asp-controller="Categories" asp-action="Details" asp-route-slug="@list.Category.Slug">@list.Category.Name</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p class="text-muted">Der er ingen lister endnu.</p>
+}

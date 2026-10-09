@@ -1,0 +1,25 @@
+@model List<ProductList>
+@{
+    ViewData["Title"] = "Mine lister";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h2 mb-0">Mine lister</h1>
+    <a class="btn btn-success" asp-action="Create">+ Ny liste</a>
+</div>
+
+@if (Model.Any())
+{
+    <ul class="list-group">
+        @foreach (var list in Model)
+        {
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <a asp-action="Details" asp-route-slug="@list.Slug">@list.Name</a>
+                <span class="badge bg-secondary-subtle text-secondary-emphasis">@list.Items.Count produkter</span>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p class="text-muted">Du har ingen lister endnu. Lav din første og del den med fællesskabet.</p>
+}

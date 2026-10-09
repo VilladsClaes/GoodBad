@@ -1,0 +1,440 @@
+@model ProductDetailsViewModel
+@{
+    ViewData["Title"] = Model.Product.Name;
+    var p = Model.Product;
+    var total = Model.GoodCount + Model.BadCount;
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Forside</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Products" asp-action="Index">Produkter</a></li>
+        <li class="breadcrumb-item">
+            <a asp-controller="Categories" asp-action="Details" asp-route-slug="@p.Category.Slug">@p.Category.Name</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">@p.Name</li>
+    </ol>
+</nav>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        @if (!string.IsNullOrEmpty(p.ImageUrl))
+        {
+            <img src="@p.ImageUrl" class="img-fluid rounded border w-100 mb-3" alt="@p.Name" />
+        }
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h6">Producent</h2>
+                @if (p.Brand is not null)
+                {
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        @if (!string.IsNullOrEmpty(p.Brand.LogoUrl))
+                        {
+                            <img src="@p.Brand.LogoUrl" class="brand-logo" alt="@p.Brand.Name logo" />
+                        }
+                        <div>
+                            <a class="fw-semibold" asp-controller="Brands" asp-action="Details" asp-route-slug="@p.Brand.Slug">@p.Brand.Name</a>
+                            @if (!string.IsNullOrEmpty(p.Brand.Country))
+                            {
+                                <div class="small text-muted">@p.Brand.Country</div>
+                            }
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(p.Brand.WebsiteUrl))
+                    {
+                        <a class="btn btn-sm btn-outline-secondary" href="@p.Brand.WebsiteUrl" target="_blank" rel="noopener nofollow">Besøg hjemmeside ↗</a>
+                    }
+                }
+                else
+                {
+                    <p class="small text-muted mb-0">Ingen producent angivet.</p>
+                }
+                @if (!string.IsNullOrEmpty(p.ModelNumber))
+                {
+                    <div class="small text-muted mt-3">Model: @p.ModelNumber</div>
+                }
+            </div>
+        </div>
+
+        @if (isAuthenticated && Model.MyLists.Any())
+        {
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h2 class="h6">Tilføj til liste</h2>
+                    <form asp-controller="Lists" asp-action="AddItem" method="post" class="d-flex gap-2">
+                        <input type="hidden" name="productId" value="@p.Id" />
+                        <select name="listId" class="form-select form-select-sm">
+                            @foreach (var list in Model.MyLists)
+                            {
+                                <option value="@list.Id">@list.Name</option>
+                            }
+                        </select>
+                        <button class="btn btn-sm btn-outline-primary" type="submit">Tilføj</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <h1 class="h2 mb-0">@p.Name</h1>
+            <span class="badge rounded-pill fs-6 @(Model.Score >= 80 ? "score-great" : Model.Score >= 60 ? "score-ok" : Model.Score >= 40 ? "score-poor" : "score-bad")">
+                @Model.Score.ToString("0") / 100
+            </span>
+        </div>
+
+        <div class="mt-2 mb-3">
+            @if (p.IsRecommended)
+            {
+                <span class="badge bg-success">GoodBad anbefaler</span>
+            }
+            @if (total > 0)
+            {
+                <span class="text-success fw-semibold">@Model.GoodCount kan lide</span>
+                <span class="text-muted">·</span>
+                <span class="text-danger fw-semibold">@Model.BadCount kan ikke lide</span>
+                <span class="text-muted">·</span>
+                <span class="text-muted">@total anmeldelser i alt</span>
+            }
+            else
+            {
+                <span class="text-muted">Ingen anmeldelser endnu &ndash; vær den første.</span>
+            }
+        </div>
+
+        @if (!string.IsNullOrEmpty(p.Description))
+        {
+            <p>@p.Description</p>
+        }
+
+        @if (Model.AppearsInLists.Any())
+        {
+            <div class="mb-3">
+                <span class="text-muted small">Findes på listerne:</span>
+                @foreach (var list in Model.AppearsInLists)
+                {
+                    <a class="badge bg-primary-subtle text-primary-emphasis text-decoration-none"
+                       asp-controller="Lists" asp-action="Details" asp-route-slug="@list.Slug">@list.Name</a>
+                }
+            </div>
+        }
+
+        @if (Model.BuyThisInstead.Any())
+        {
+            <div class="callout-instead p-3 mb-3">
+                <h2 class="h5 text-success mb-2">Godt at du ikke købte dette &ndash; du skulle have købt dette i stedet</h2>
+                @foreach (var rec in Model.BuyThisInstead)
+                {
+                    var alt = rec.AlternativeProduct;
+                    <div class="d-flex gap-3 align-items-center">
+                        @if (!string.IsNullOrEmpty(alt.ImageUrl))
+                        {
+                            <img src="@alt.ImageUrl" style="width:80px;height:60px;object-fit:cover" class="rounded" alt="@alt.Name" />
+                        }
+                        <div>
+                            <a class="fw-semibold" asp-action="Details" asp-route-slug="@alt.Slug">@alt.Name</a>
+                            @if (alt.Brand is not null)
+                            {
+                                <span class="text-muted small">· @alt.Brand.Name</span>
+                            }
+                            <div class="small text-muted">@rec.Reason</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (Model.BetterChoiceThan.Any())
+        {
+            <div class="callout-avoid p-3 mb-3">
+                <h2 class="h5 text-danger mb-2">Godt valg! Disse produkter er dårligere</h2>
+                @foreach (var rec in Model.BetterChoiceThan)
+                {
+                    var worse = rec.SourceProduct;
+                    <div class="d-flex gap-3 align-items-center">
+                        @if (!string.IsNullOrEmpty(worse.ImageUrl))
+                        {
+                            <img src="@worse.ImageUrl" style="width:80px;height:60px;object-fit:cover" class="rounded" alt="@worse.Name" />
+                        }
+                        <div>
+                            <a class="fw-semibold" asp-action="Details" asp-route-slug="@worse.Slug">@worse.Name</a>
+                            @if (worse.Brand is not null)
+                            {
+                                <span class="text-muted small">· @worse.Brand.Name</span>
+                            }
+                            <div class="small text-muted">@rec.Reason</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h2 class="h6 text-danger">Hvad er galt? (@Model.TopProblems.Count)</h2>
+                        @if (Model.TopProblems.Any())
+                        {
+                            <ul class="list-unstyled mb-0 small">
+                                @foreach (var t in Model.TopProblems)
+                                {
+                                    <li class="mb-1">
+                                        <span class="aspect-chip aspect-problem">@t.Aspect.Text</span>
+                                        <span class="text-muted">nævnt @t.ReviewAspectCount×, bekræftet @t.AgreeCount×</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="small text-muted mb-0">Ingen problemer rapporteret.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h2 class="h6 text-success">Hvad er godt? (@Model.TopPraises.Count)</h2>
+                        @if (Model.TopPraises.Any())
+                        {
+                            <ul class="list-unstyled mb-0 small">
+                                @foreach (var t in Model.TopPraises)
+                                {
+                                    <li class="mb-1">
+                                        <span class="aspect-chip aspect-praise">@t.Aspect.Text</span>
+                                        <span class="text-muted">nævnt @t.ReviewAspectCount×, bekræftet @t.AgreeCount×</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="small text-muted mb-0">Ingen styrker rapporteret endnu.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr class="my-5" id="anmeldelser" />
+
+<h2 class="h3">Anmeldelser</h2>
+
+@if (total == 0)
+{
+    <p class="text-muted">Der er ingen anmeldelser endnu. Vær den første til at sige om produktet er godt eller skidt &ndash; og hvorfor.</p>
+}
+else
+{
+    <ul class="nav nav-tabs mb-3" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-bad" type="button">
+                <span class="text-danger">Kan ikke lide (@Model.BadCount)</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-good" type="button">
+                <span class="text-success">Kan lide (@Model.GoodCount)</span>
+            </button>
+        </li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="tab-bad">
+            @foreach (var review in Model.BadReviews)
+            {
+                ViewData["UserVote"] = Model.UserReviewVotes.TryGetValue(review.Id, out var bv) ? bv : (bool?)null;
+                ViewData["IsAuthenticated"] = isAuthenticated;
+                ViewData["UserAspectVotes"] = Model.UserAspectVotes;
+                <partial name="_ReviewCard" model="review" />
+            }
+            @if (!Model.BadReviews.Any())
+            {
+                <p class="text-muted">Ingen negative anmeldelser.</p>
+            }
+        </div>
+        <div class="tab-pane fade" id="tab-good">
+            @foreach (var review in Model.GoodReviews)
+            {
+                ViewData["UserVote"] = Model.UserReviewVotes.TryGetValue(review.Id, out var gv) ? gv : (bool?)null;
+                ViewData["IsAuthenticated"] = isAuthenticated;
+                ViewData["UserAspectVotes"] = Model.UserAspectVotes;
+                <partial name="_ReviewCard" model="review" />
+            }
+            @if (!Model.GoodReviews.Any())
+            {
+                <p class="text-muted">Ingen positive anmeldelser.</p>
+            }
+        </div>
+    </div>
+}
+
+<hr class="my-5" id="fixes" />
+
+<h2 class="h3">Fixes og løsninger (@Model.Fixes.Count)</h2>
+<p class="text-muted">Fællesskabet og systemet foreslår konkrete løsninger på problemerne ovenfor.</p>
+
+@if (Model.Fixes.Any())
+{
+    <div class="row row-cols-1 row-cols-md-2 g-3 mb-3">
+        @foreach (var fix in Model.Fixes)
+        {
+            <div class="col">
+                <div class="fix-card p-3 h-100 @(fix.Source == FixSource.System ? "fix-system" : "")">
+                    <div class="d-flex justify-content-between">
+                        <strong>@fix.Title</strong>
+                        <span class="badge @(fix.Source == FixSource.System ? "bg-secondary" : "bg-primary")">
+                            @(fix.Source == FixSource.System ? "Systemforslag" : "Fra fællesskabet")
+                        </span>
+                    </div>
+                    <p class="small mb-2" style="white-space: pre-line">@fix.Body</p>
+                    @if (!string.IsNullOrEmpty(fix.SourceUrl))
+                    {
+                        <a class="small" href="@fix.SourceUrl" target="_blank" rel="noopener nofollow">
+                            @(fix.SourceKind == FixSourceKind.Reddit ? "Se Reddit-tråd ↗" : "Se video/guide ↗")
+                        </a>
+                    }
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <form asp-controller="Fixes" asp-action="Vote" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@fix.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-success" @(isAuthenticated ? "" : "disabled")>
+                                Det fix virker (@fix.Votes.Count)
+                            </button>
+                        </form>
+                        <span class="small text-muted">@(fix.User?.DisplayName ?? (fix.Source == FixSource.System ? "GoodBad" : "Anonym"))</span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p class="text-muted">Der er ingen forslag endnu. Vær den første med et fix.</p>
+}
+
+@if (isAuthenticated)
+{
+    <div class="card mb-5">
+        <div class="card-body">
+            <h3 class="h6">Del et fix til dette produkt</h3>
+            <form asp-controller="Fixes" asp-action="Create" method="post">
+                <input type="hidden" name="productId" value="@p.Id" />
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <input name="title" class="form-control form-control-sm" placeholder="Titel, fx &ldquo;Sy sømmen med kraftig tråd&rdquo;" required />
+                    </div>
+                    <div class="col-md-6">
+                        <input name="sourceUrl" class="form-control form-control-sm" placeholder="Link (valgfrit)" />
+                    </div>
+                    <div class="col-12">
+                        <textarea name="body" class="form-control form-control-sm" rows="2" placeholder="Hvordan løser man problemet?" required></textarea>
+                    </div>
+                    <div class="col-12">
+                        <button class="btn btn-sm btn-primary" type="submit">Del fix</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+<hr class="my-5" />
+
+<h2 class="h3">Skriv en anmeldelse</h2>
+@if (!isAuthenticated)
+{
+    <div class="alert alert-secondary">
+        <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Url.Action("Details", "Products", new { slug = p.Slug })">Log ind</a>
+        for at anmelde produktet.
+    </div>
+}
+else if (Model.UserHasReviewed)
+{
+    <p class="text-muted">Du har allerede anmeldt dette produkt. Tak for bidraget!</p>
+}
+else
+{
+    <form asp-controller="Reviews" asp-action="Create" method="post" class="card p-4">
+        <input type="hidden" name="ProductId" value="@Model.NewReview.ProductId" />
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Hvad synes du om produktet?</label>
+            <div class="row g-2 verdict-picker">
+                <div class="col-6" style="position:relative">
+                    <input type="radio" id="verdict-bad" name="Verdict" value="Bad" checked />
+                    <label for="verdict-bad">👎 Jeg kan ikke lide det</label>
+                </div>
+                <div class="col-6" style="position:relative">
+                    <input type="radio" id="verdict-good" name="Verdict" value="Good" />
+                    <label for="verdict-good">👍 Jeg kan lide det</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold" for="review-title">Overskrift</label>
+            <input class="form-control" id="review-title" name="Title" maxlength="160" required
+                   placeholder="Fx &ldquo;Gik op i sømmene efter to uger&rdquo;" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold" for="review-body">Hvad er der galt &ndash; eller hvorfor er det så godt?</label>
+            <textarea class="form-control" id="review-body" name="Body" rows="4" required
+                      placeholder="Vær konkret: går det op i sømmene? Er plastikken af lav kvalitet? Smager det dårligt? Beskriv det, så andre kan bruge det."></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold" for="review-duration">Hvor længe har du haft produktet?</label>
+            <input class="form-control" id="review-duration" name="OwnershipDuration" maxlength="120" placeholder="Fx 3 måneder" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Træk det til den rigtige kategori &ndash; hvad gælder for dette produkt?</label>
+            <p class="small text-muted mb-2">Vælg de problemer der er galt (eller de styrker der er gode). Det gør anmeldelsen søgbar i kategorien.</p>
+
+            <div class="aspect-picker mb-2">
+                <div class="fw-semibold small text-danger">Problemer</div>
+                @foreach (var aspect in Model.NewReview.AvailableAspects.Where(a => a.Kind == AspectKind.Problem))
+                {
+                    <label class="d-inline-block">
+                        <input type="checkbox" name="SelectedAspectIds" value="@aspect.Id" class="d-none" />
+                        <span class="aspect-chip aspect-problem">@aspect.Text</span>
+                    </label>
+                }
+            </div>
+            <div class="aspect-picker">
+                <div class="fw-semibold small text-success">Styrker</div>
+                @foreach (var aspect in Model.NewReview.AvailableAspects.Where(a => a.Kind == AspectKind.Praise))
+                {
+                    <label class="d-inline-block">
+                        <input type="checkbox" name="SelectedAspectIds" value="@aspect.Id" class="d-none" />
+                        <span class="aspect-chip aspect-praise">@aspect.Text</span>
+                    </label>
+                }
+            </div>
+        </div>
+
+        <div>
+            <button type="submit" class="btn btn-success">Send anmeldelse</button>
+            <span class="small text-muted ms-2">Systemet leder bagefter efter YouTube- og Reddit-fixes ud fra dine ord.</span>
+        </div>
+    </form>
+}
+
+@section Scripts {
+    <script>
+        // Vis valgte aspekter tydeligt ved at skifte chip-farve.
+        document.querySelectorAll('.aspect-picker input[type=checkbox]').forEach(function (cb) {
+            cb.addEventListener('change', function () {
+                var chip = cb.parentElement.querySelector('.aspect-chip');
+                chip.style.outline = cb.checked ? '2px solid #1c2530' : 'none';
+                chip.style.fontWeight = cb.checked ? '700' : '400';
+            });
+        });
+    </script>
+}
