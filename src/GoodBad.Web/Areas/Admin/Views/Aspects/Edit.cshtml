@@ -1,0 +1,39 @@
+@model AspectEditViewModel
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Nyt aspekt" : "Rediger aspekt";
+    var categories = (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Categories;
+}
+
+<h1 class="h3 mb-3">@ViewData["Title"]</h1>
+
+<form asp-action="@(Model.Id == 0 ? "Create" : "Edit")" method="post" class="card card-body shadow-sm" style="max-width:760px">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label asp-for="Text" class="form-label"></label>
+        <input asp-for="Text" class="form-control" placeholder="fx “går op i sømmene”" />
+        <span asp-validation-for="Text" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Kind" class="form-label"></label>
+        <select asp-for="Kind" class="form-select" asp-items="Html.GetEnumSelectList<AspectKind>()"></select>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CategoryIds" class="form-label"></label>
+        <select asp-for="CategoryIds" multiple class="form-select" size="12" asp-items="categories"></select>
+        <div class="form-text">Lad feltet stå tomt, hvis problemet kan optræde i alle kategorier.</div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-success">Gem</button>
+        <a class="btn btn-outline-secondary" asp-action="Index">Tilbage</a>
+    </div>
+</form>

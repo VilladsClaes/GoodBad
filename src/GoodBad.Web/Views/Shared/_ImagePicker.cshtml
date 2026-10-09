@@ -1,0 +1,39 @@
+@model ImagePickerModel
+@{
+    var fileId = Model.FileField + "-file";
+    var previewId = Model.FileField + "-preview";
+}
+<div class="image-picker" data-image-picker>
+    <label class="form-label d-block">@Model.Label</label>
+
+    <div class="d-flex flex-wrap gap-2 mb-2">
+        <button type="button" class="btn btn-sm btn-primary" data-image-camera="@Model.FileField">
+            &#128247; Tag billede
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-image-gallery="@Model.FileField">
+            &#128444; Vælg billede (kamerarulle / Google Photos)
+        </button>
+    </div>
+
+    <input type="file" id="@fileId" name="@Model.FileField" accept="image/*"
+           class="form-control form-control-sm" data-image-input data-image-preview="#@previewId" />
+
+    <div class="form-text mb-2">
+        På mobilen åbner <em>Tag billede</em> kameraet direkte. <em>Vælg billede</em> åbner telefonens
+        billedvælger, hvor Google Photos og kamerarullen også ligger.
+    </div>
+
+    <label class="form-label small text-muted">… eller indsæt et link til et billede</label>
+    <input type="url" name="@Model.UrlField" value="@Model.CurrentUrl" class="form-control form-control-sm"
+           placeholder="https://..." data-image-url />
+
+    @if (Model.Hint is not null)
+    {
+        <div class="form-text">@Model.Hint</div>
+    }
+
+    <div class="mt-2">
+        <img id="@previewId" src="@(Model.CurrentUrl ?? "")" alt="Forhåndsvisning"
+             class="@Model.AspectCss" style="@(string.IsNullOrWhiteSpace(Model.CurrentUrl) ? "display:none" : "")" />
+    </div>
+</div>

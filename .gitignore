@@ -5,11 +5,12 @@ obj/
 *.suo
 .vs/
 
-# ---- Local SQLite development database (do not commit) ----------------
+# ---- Uploaded images (user content – created at runtime) --------------
+src/GoodBad.Web/wwwroot/uploads/*
+!src/GoodBad.Web/wwwroot/uploads/.gitkeep
+
+# ---- Local database files (MySQL is used in production) ---------------
 *.db
-*.db-shm
-*.db-wal
-App_Data/
 
 # ---- Publish output / secrets ----------------------------------------
 publish/

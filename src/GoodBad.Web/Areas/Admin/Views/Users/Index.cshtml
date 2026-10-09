@@ -1,0 +1,52 @@
+@model List<AdminUserRow>
+@{
+    ViewData["Title"] = "Brugere";
+    var currentUrl = Context.Request.Path + Context.Request.QueryString;
+}
+
+<h1 class="h3 mb-3">Brugere</h1>
+
+<p class="text-muted">
+    Administratorer kan alt i dette område. Du kan også styre adgangen centralt ved at skrive e-mails i
+    <code>Admin:Emails</code> i <code>appsettings.Production.json</code> – de bliver administratorer ved næste genstart.
+</p>
+
+<form method="get" class="mb-3">
+    <input type="search" name="q" value="@ViewBag.Query" class="form-control form-control-sm" style="max-width:320px" placeholder="Søg navn eller e-mail" />
+</form>
+
+<div class="table-responsive">
+    <table class="table table-sm align-middle bg-white">
+        <thead><tr><th>Navn</th><th>E-mail</th><th>Anmeldelser</th><th>Oprettet</th><th>Rolle</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@(user.DisplayName ?? "–")</td>
+                <td class="small text-muted">@user.Email</td>
+                <td>@user.ReviewCount</td>
+                <td class="small text-muted">@user.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                <td>
+                    @if (user.IsAdmin)
+                    {
+                        <span class="badge bg-dark">Administrator</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-light text-dark">Bruger</span>
+                    }
+                </td>
+                <td class="text-end">
+                    <form asp-action="ToggleAdmin" method="post" class="d-inline">
+                        <input type="hidden" name="id" value="@user.Id" />
+                        <input type="hidden" name="returnUrl" value="@currentUrl" />
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                            @(user.IsAdmin ? "Fjern admin" : "Gør til admin")
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

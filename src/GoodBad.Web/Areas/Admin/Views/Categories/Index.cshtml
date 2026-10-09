@@ -1,0 +1,51 @@
+@model List<Category>
+@{
+    ViewData["Title"] = "Kategorier";
+    var counts = (Dictionary<int, int>)ViewBag.ProductCounts;
+    Func<int, int> products = id => counts.TryGetValue(id, out var c) ? c : 0;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Kategorier <span class="text-muted fs-6">(@Model.Count)</span></h1>
+    <a class="btn btn-success" asp-action="Create">+ Ny kategori</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-sm align-middle bg-white">
+        <thead><tr><th>Navn</th><th>Overkategori</th><th>Produkter</th><th>Sortering</th><th>Slug</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var category in Model.Where(c => c.ParentId == null).OrderBy(c => c.SortOrder))
+        {
+            <tr class="fw-semibold">
+                <td>@category.Icon @category.Name</td>
+                <td class="text-muted">–</td>
+                <td>@products(category.Id)</td>
+                <td>@category.SortOrder</td>
+                <td class="text-muted small">@category.Slug</td>
+                <td class="text-end">
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@category.Id">Rediger</a>
+                    <form asp-action="Delete" asp-route-id="@category.Id" method="post" class="d-inline" onsubmit="return confirm('Slet @category.Name?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Slet</button>
+                    </form>
+                </td>
+            </tr>
+            foreach (var child in Model.Where(c => c.ParentId == category.Id).OrderBy(c => c.Name))
+            {
+                <tr>
+                    <td class="ps-4">↳ @child.Icon @child.Name</td>
+                    <td class="text-muted">@category.Name</td>
+                    <td>@products(child.Id)</td>
+                    <td>@child.SortOrder</td>
+                    <td class="text-muted small">@child.Slug</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@child.Id">Rediger</a>
+                        <form asp-action="Delete" asp-route-id="@child.Id" method="post" class="d-inline" onsubmit="return confirm('Slet @child.Name?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Slet</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+</div>

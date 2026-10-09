@@ -23,7 +23,7 @@ public class HomeController : Controller
         {
             // The products we actively recommend: durable, repairable, long-lived.
             Recommended = await _db.Products
-                .Where(p => p.IsRecommended)
+                .Where(p => !p.IsHidden && p.IsRecommended)
                 .OrderByDescending(p => p.Reviews.Count(r => r.Verdict == Verdict.Good))
                 .ThenBy(p => p.Name)
                 .Take(8)
@@ -32,7 +32,7 @@ public class HomeController : Controller
 
             // Products the community is warning against.
             Warnings = await _db.Products
-                .Where(p => p.Reviews.Any(r => r.Verdict == Verdict.Bad))
+                .Where(p => !p.IsHidden && p.Reviews.Any(r => r.Verdict == Verdict.Bad && !r.IsHidden))
                 .OrderByDescending(p => p.Reviews.Count(r => r.Verdict == Verdict.Bad))
                 .ThenBy(p => p.Name)
                 .Take(4)
@@ -42,6 +42,7 @@ public class HomeController : Controller
             Lists = await _db.ProductLists
                 .Include(l => l.Category)
                 .Include(l => l.Items)
+                .Where(l => !l.IsHidden)
                 .OrderByDescending(l => l.IsEditorial)
                 .ThenBy(l => l.Name)
                 .Take(6)
@@ -55,12 +56,13 @@ public class HomeController : Controller
             LatestReviews = await _db.Reviews
                 .Include(r => r.Product)
                 .Include(r => r.User)
+                .Where(r => !r.IsHidden && !r.Product.IsHidden)
                 .OrderByDescending(r => r.CreatedAt)
                 .Take(6)
                 .ToListAsync(),
 
-            ProductCount = await _db.Products.CountAsync(),
-            ReviewCount = await _db.Reviews.CountAsync(),
+            ProductCount = await _db.Products.CountAsync(p => !p.IsHidden),
+            ReviewCount = await _db.Reviews.CountAsync(r => !r.IsHidden),
             BrandCount = await _db.Brands.CountAsync(),
             ListCount = await _db.ProductLists.CountAsync()
         };

@@ -359,7 +359,7 @@ else if (Model.UserHasReviewed)
 }
 else
 {
-    <form asp-controller="Reviews" asp-action="Create" method="post" class="card p-4">
+    <form asp-controller="Reviews" asp-action="Create" method="post" enctype="multipart/form-data" class="card p-4">
         <input type="hidden" name="ProductId" value="@Model.NewReview.ProductId" />
 
         <div class="mb-3">
@@ -391,6 +391,17 @@ else
         <div class="mb-3">
             <label class="form-label fw-semibold" for="review-duration">Hvor længe har du haft produktet?</label>
             <input class="form-control" id="review-duration" name="OwnershipDuration" maxlength="120" placeholder="Fx 3 måneder" />
+        </div>
+
+        <div class="mb-3">
+            <partial name="_ImagePicker" model="@(new GoodBad.Web.ViewModels.ImagePickerModel
+                     {
+                         FileField = "ImageFile",
+                         UrlField = "ImageUrl",
+                         Label = "Tag et billede af produktet (valgfrit)",
+                         Hint = "Et billede gør det lettere at se, hvor det går galt – fx en løs søm eller en revnet plastikdel.",
+                         AspectCss = "rounded border w-100"
+                     })" />
         </div>
 
         <div class="mb-3">

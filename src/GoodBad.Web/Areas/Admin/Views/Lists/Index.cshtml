@@ -1,0 +1,49 @@
+@model List<ProductList>
+@{ ViewData["Title"] = "Indkøbslister"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Indkøbslister <span class="text-muted fs-6">(@Model.Count)</span></h1>
+    <a class="btn btn-success" asp-action="Create">+ Ny liste</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-sm align-middle bg-white">
+        <thead><tr><th>Navn</th><th>Kategori</th><th>Type</th><th>Ejer</th><th>Produkter</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var list in Model)
+        {
+            <tr class="@(list.IsHidden ? "table-secondary" : "")">
+                <td><a asp-action="Edit" asp-route-id="@list.Id">@list.Name</a></td>
+                <td>@(list.Category?.Name ?? "–")</td>
+                <td>
+                    @if (list.IsEditorial)
+                    {
+                        <span class="badge bg-success">GoodBad</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-light text-dark">Bruger</span>
+                    }
+                    @if (list.IsHidden)
+                    {
+                        <span class="badge bg-secondary">Skjult</span>
+                    }
+                </td>
+                <td class="small text-muted">@(list.Owner?.DisplayName ?? "–")</td>
+                <td>@list.Items.Count</td>
+                <td class="text-end text-nowrap">
+                    <form asp-action="SetFeatured" method="post" class="d-inline">
+                        <input type="hidden" name="id" value="@list.Id" />
+                        <input type="hidden" name="value" value="@(!list.IsEditorial)" />
+                        <button type="submit" class="btn btn-sm btn-outline-success">@(list.IsEditorial ? "Gør til brugerliste" : "Gør redaktionel")</button>
+                    </form>
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@list.Id">Rediger</a>
+                    <form asp-action="Delete" asp-route-id="@list.Id" method="post" class="d-inline" onsubmit="return confirm('Slet listen?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Slet</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

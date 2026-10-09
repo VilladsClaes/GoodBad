@@ -1,0 +1,45 @@
+@model List<Brand>
+@{ ViewData["Title"] = "Brands"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Brands <span class="text-muted fs-6">(@Model.Count)</span></h1>
+    <a class="btn btn-success" asp-action="Create">+ Nyt brand</a>
+</div>
+
+<form method="get" class="mb-3">
+    <input type="search" name="q" value="@ViewBag.Query" class="form-control form-control-sm" style="max-width:320px" placeholder="Søg brand" />
+</form>
+
+<div class="table-responsive">
+    <table class="table table-sm align-middle bg-white">
+        <thead><tr><th>Logo</th><th>Navn</th><th>Land</th><th>Hjemmeside</th><th>Produkter</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var brand in Model)
+        {
+            <tr>
+                <td>
+                    @if (!string.IsNullOrWhiteSpace(brand.LogoUrl))
+                    {
+                        <img src="@brand.LogoUrl" alt="@brand.Name" style="height:32px;max-width:90px;object-fit:contain" />
+                    }
+                </td>
+                <td><a asp-area="" asp-controller="Brands" asp-action="Details" asp-route-slug="@brand.Slug">@brand.Name</a></td>
+                <td>@brand.Country</td>
+                <td class="small">
+                    @if (!string.IsNullOrWhiteSpace(brand.WebsiteUrl))
+                    {
+                        <a href="@brand.WebsiteUrl" target="_blank" rel="noopener">@brand.WebsiteUrl</a>
+                    }
+                </td>
+                <td>@brand.Products.Count</td>
+                <td class="text-end">
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@brand.Id">Rediger</a>
+                    <form asp-action="Delete" asp-route-id="@brand.Id" method="post" class="d-inline" onsubmit="return confirm('Slet @brand.Name? Produkterne bevares uden brand.');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Slet</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

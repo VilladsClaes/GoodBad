@@ -1,0 +1,105 @@
+@model ListEditViewModel
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Ny liste" : "Rediger liste";
+    var categories = (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Categories;
+    var products = (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Products;
+    var list = ViewBag.List as ProductList;
+}
+
+<h1 class="h3 mb-3">@ViewData["Title"]</h1>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <form asp-action="@(Model.Id == 0 ? "Create" : "Edit")" method="post" class="card card-body shadow-sm">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="CategoryId" class="form-label"></label>
+                <select asp-for="CategoryId" class="form-select" asp-items="categories">
+                    <option value="">– Ingen –</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+            </div>
+            <div class="form-check form-switch mb-2">
+                <input asp-for="IsEditorial" class="form-check-input" type="checkbox" />
+                <label asp-for="IsEditorial" class="form-check-label"></label>
+            </div>
+            <div class="form-check form-switch mb-3">
+                <input asp-for="IsHidden" class="form-check-input" type="checkbox" />
+                <label asp-for="IsHidden" class="form-check-label"></label>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success">Gem</button>
+                <a class="btn btn-outline-secondary" asp-action="Index">Tilbage</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header py-2">Tilføj produkt</div>
+            <div class="card-body">
+                @if (list is null)
+                {
+                    <p class="text-muted mb-0">Gem listen først, så kan du tilføje produkter.</p>
+                }
+                else
+                {
+                    <form asp-action="AddItem" method="post" class="row g-2 align-items-end">
+                        <input type="hidden" name="id" value="@list.Id" />
+                        <div class="col-sm-6">
+                            <label class="form-label small">Produkt</label>
+                            <select name="productId" class="form-select form-select-sm" asp-items="products" required>
+                                <option value="">– Vælg –</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label small">Note</label>
+                            <input name="note" class="form-control form-control-sm" placeholder="fx “holder i 10 år”" />
+                        </div>
+                        <div class="col-sm-2">
+                            <button type="submit" class="btn btn-sm btn-success w-100">Tilføj</button>
+                        </div>
+                    </form>
+                }
+            </div>
+        </div>
+
+        @if (list is not null)
+        {
+            <div class="table-responsive">
+                <table class="table table-sm align-middle bg-white">
+                    <thead><tr><th>#</th><th>Produkt</th><th>Note</th><th></th></tr></thead>
+                    <tbody>
+                    @foreach (var item in list.Items.OrderBy(i => i.SortOrder))
+                    {
+                        <tr>
+                            <td>@item.SortOrder</td>
+                            <td><a asp-area="" asp-controller="Products" asp-action="Details" asp-route-slug="@item.Product.Slug">@item.Product.Name</a>
+                                <span class="text-muted small">@item.Product.Brand?.Name</span></td>
+                            <td class="small">@item.Note</td>
+                            <td class="text-end">
+                                <form asp-action="RemoveItem" method="post" onsubmit="return confirm('Fjern produktet fra listen?');">
+                                    <input type="hidden" name="id" value="@list.Id" />
+                                    <input type="hidden" name="itemId" value="@item.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Fjern</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

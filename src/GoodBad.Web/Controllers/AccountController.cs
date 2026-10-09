@@ -1,4 +1,5 @@
 using GoodBad.Web.Models;
+using GoodBad.Web.Services;
 using GoodBad.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -10,11 +11,16 @@ public class AccountController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
+    private readonly IConfiguration _configuration;
 
-    public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+    public AccountController(
+        UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager,
+        IConfiguration configuration)
     {
         _userManager = userManager;
         _signInManager = signInManager;
+        _configuration = configuration;
     }
 
     [HttpGet]
@@ -45,8 +51,23 @@ public class AccountController : Controller
         var result = await _userManager.CreateAsync(user, model.Password);
         if (result.Succeeded)
         {
+            // Bootstrap: until the site owner has been made an administrator,
+            // the first registered account takes the role so /Admin is reachable.
+            var promoted = false;
+            if (AdminBootstrapper.AutoPromoteFirstUser(_configuration))
+            {
+                var admins = await _userManager.GetUsersInRoleAsync(Roles.Admin);
+                if (admins.Count == 0)
+                {
+                    await _userManager.AddToRoleAsync(user, Roles.Admin);
+                    promoted = true;
+                }
+            }
+
             await _signInManager.SignInAsync(user, isPersistent: false);
-            TempData["Success"] = $"Velkommen til, {model.DisplayName}!";
+            TempData["Success"] = promoted
+                ? $"Velkommen til, {model.DisplayName}! Du er nu administrator – åbn Admin i menuen."
+                : $"Velkommen til, {model.DisplayName}!";
             return RedirectToLocal(returnUrl);
         }
 

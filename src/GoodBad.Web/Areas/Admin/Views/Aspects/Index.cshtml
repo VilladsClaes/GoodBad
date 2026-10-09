@@ -1,0 +1,61 @@
+@model List<Aspect>
+@{
+    ViewData["Title"] = "Problemer & styrker";
+    var kind = ViewBag.Kind as AspectKind?;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h1 class="h3 mb-0">Problemer &amp; styrker <span class="text-muted fs-6">(@Model.Count)</span></h1>
+    <div class="d-flex gap-2">
+        <a class="btn btn-success" asp-action="Create" asp-route-kind="@AspectKind.Problem">+ Nyt problem</a>
+        <a class="btn btn-outline-success" asp-action="Create" asp-route-kind="@AspectKind.Praise">+ Ny styrke</a>
+    </div>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-sm-5">
+        <input type="search" name="q" value="@ViewBag.Query" class="form-control form-control-sm" placeholder="Søg i tekster" />
+    </div>
+    <div class="col-sm-4">
+        <select name="kind" class="form-select form-select-sm">
+            <option value="">Alle typer</option>
+            <option value="Problem" selected="@(kind == AspectKind.Problem)">Problemer</option>
+            <option value="Praise" selected="@(kind == AspectKind.Praise)">Styrker</option>
+        </select>
+    </div>
+    <div class="col-sm-3"><button class="btn btn-sm btn-outline-secondary w-100">Filtrér</button></div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-sm align-middle bg-white">
+        <thead><tr><th>Tekst</th><th>Type</th><th>Kategorier</th><th>Brugt i anmeldelser</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var aspect in Model)
+        {
+            <tr>
+                <td>@aspect.Text</td>
+                <td>
+                    @if (aspect.Kind == AspectKind.Problem)
+                    {
+                        <span class="badge bg-danger">Problem</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">Styrke</span>
+                    }
+                </td>
+                <td class="small text-muted">
+                    @(aspect.Categories.Count == 0 ? "Alle kategorier" : string.Join(", ", aspect.Categories.Select(c => c.Category.Name).Take(6)) + (aspect.Categories.Count > 6 ? $" (+{aspect.Categories.Count - 6})" : ""))
+                </td>
+                <td>@aspect.Reviews.Count</td>
+                <td class="text-end">
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@aspect.Id">Rediger</a>
+                    <form asp-action="Delete" asp-route-id="@aspect.Id" method="post" class="d-inline" onsubmit="return confirm('Slet @aspect.Text?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Slet</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

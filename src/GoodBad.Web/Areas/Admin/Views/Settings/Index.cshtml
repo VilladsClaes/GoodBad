@@ -1,0 +1,47 @@
+@model SettingsViewModel
+@{ ViewData["Title"] = "Indstillinger"; }
+
+<h1 class="h3 mb-3">Indstillinger</h1>
+
+<p class="text-muted">
+    Alt her gemmes i databasen og slår værdierne i <code>appsettings</code> igennem. Lad et felt stå tomt for at
+    bruge standardværdien.
+</p>
+
+<form asp-action="Index" method="post">
+    @{ var index = 0; }
+    @foreach (var group in Model.Rows.GroupBy(r => r.Group))
+    {
+        <div class="card shadow-sm mb-3">
+            <div class="card-header py-2 fw-semibold">@group.Key</div>
+            <div class="card-body">
+                @foreach (var row in group)
+                {
+                    <div class="mb-3">
+                        <label class="form-label">@row.Label <span class="text-muted small">(@row.Key)</span></label>
+                        <input name="values[@index]" value="@row.Value" class="form-control form-control-sm" />
+                    </div>
+                    index++;
+                }
+            </div>
+        </div>
+    }
+
+    <button type="submit" class="btn btn-success">Gem indstillinger</button>
+    <a class="btn btn-outline-secondary" asp-action="Index" asp-controller="Dashboard">Tilbage</a>
+</form>
+
+<div class="alert alert-secondary mt-4">
+    <strong>Reddit (anbefales).</strong>
+    Reddit blokerer anonyme JSON-kald fra mange webhoteller. Opret en gratis app på
+    <a href="https://www.reddit.com/prefs/apps" target="_blank" rel="noopener">reddit.com/prefs/apps</a>
+    (vælg typen <em>script</em> eller <em>installed app</em>), og indsæt Client ID og Client Secret ovenfor.
+    Så søger GoodBad via Reddits godkendte API i stedet for det anonyme endpoint.
+</div>
+
+<div class="alert alert-secondary">
+    <strong>Hvordan får jeg en YouTube-nøgle?</strong>
+    Opret et projekt i <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener">Google Cloud Console</a>,
+    aktivér <em>YouTube Data API v3</em>, opret en API-nøgle og indsæt den ovenfor. Uden nøglen viser fix-motoren
+    kun almindelige søgelinks i stedet for rigtige videoer.
+</div>

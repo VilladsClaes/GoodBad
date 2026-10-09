@@ -1,0 +1,49 @@
+@model FixRuleEditViewModel
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Ny fix-regel" : "Rediger fix-regel";
+    var aspects = (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Aspects;
+}
+
+<h1 class="h3 mb-3">@ViewData["Title"]</h1>
+
+<form asp-action="@(Model.Id == 0 ? "Create" : "Edit")" method="post" class="card card-body shadow-sm" style="max-width:760px">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label asp-for="Keywords" class="form-label"></label>
+        <input asp-for="Keywords" class="form-control" placeholder="lynlås, lynlaas, gik i stykker, revnede" />
+        <div class="form-text">Komma-separeret. Der matches uden hensyn til store/små bogstaver.</div>
+        <span asp-validation-for="Keywords" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label"></label>
+        <input asp-for="Title" class="form-control" placeholder="Sådan skifter du lynlåsen i en regnjakke" />
+        <span asp-validation-for="Title" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Url" class="form-label"></label>
+        <input asp-for="Url" class="form-control" placeholder="https://www.youtube.com/watch?v=..." />
+        <div class="form-text">Link til en YouTube-video, en Reddit-tråd eller en guide.</div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-5 mb-3">
+            <label asp-for="Kind" class="form-label"></label>
+            <select asp-for="Kind" class="form-select" asp-items="Html.GetEnumSelectList<FixSourceKind>()"></select>
+        </div>
+        <div class="col-md-7 mb-3">
+            <label asp-for="AspectId" class="form-label"></label>
+            <select asp-for="AspectId" class="form-select" asp-items="aspects">
+                <option value="">– Intet –</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-success">Gem</button>
+        <a class="btn btn-outline-secondary" asp-action="Index">Tilbage</a>
+    </div>
+</form>

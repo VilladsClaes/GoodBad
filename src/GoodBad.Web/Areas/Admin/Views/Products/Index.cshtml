@@ -1,0 +1,103 @@
+@model List<Product>
+@{
+    ViewData["Title"] = "Produkter";
+    var page = (int)ViewBag.Page;
+    var totalPages = (int)ViewBag.TotalPages;
+    var filter = (string?)ViewBag.Filter;
+    var currentUrl = Context.Request.Path + Context.Request.QueryString;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h1 class="h3 mb-0">Produkter <span class="text-muted fs-6">(@ViewBag.Total)</span></h1>
+    <a class="btn btn-success" asp-area="" asp-controller="Products" asp-action="Create">+ Nyt produkt</a>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-sm-5">
+        <input type="search" name="q" value="@ViewBag.Query" class="form-control form-control-sm" placeholder="Søg produkt eller brand" />
+    </div>
+    <div class="col-sm-4">
+        <select name="filter" class="form-select form-select-sm">
+            <option value="">Alle produkter</option>
+            <option value="recommended" selected="@(filter == "recommended")">GoodBad-anbefaler</option>
+            <option value="hidden" selected="@(filter == "hidden")">Skjulte</option>
+            <option value="noimage" selected="@(filter == "noimage")">Uden billede</option>
+        </select>
+    </div>
+    <div class="col-sm-3"><button class="btn btn-sm btn-outline-secondary w-100">Filtrér</button></div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-sm align-middle bg-white">
+        <thead><tr><th></th><th>Produkt</th><th>Brand</th><th>Kategori</th><th>Anm.</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var product in Model)
+        {
+            <tr class="@(product.IsHidden ? "table-secondary" : "")">
+                <td style="width:60px">
+                    @if (!string.IsNullOrWhiteSpace(product.ImageUrl))
+                    {
+                        <img src="@product.ImageUrl" alt="" style="width:52px;height:40px;object-fit:cover;border-radius:4px" />
+                    }
+                </td>
+                <td>
+                    <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-slug="@product.Slug">@product.Name</a>
+                    @if (!string.IsNullOrWhiteSpace(product.ModelNumber))
+                    {
+                        <span class="text-muted small">· @product.ModelNumber</span>
+                    }
+                </td>
+                <td>@(product.Brand?.Name ?? "–")</td>
+                <td>@product.Category.Name</td>
+                <td>@product.Reviews.Count</td>
+                <td>
+                    @if (product.IsRecommended)
+                    {
+                        <span class="badge bg-success">Anbefalet</span>
+                    }
+                    @if (product.IsHidden)
+                    {
+                        <span class="badge bg-secondary">Skjult</span>
+                    }
+                </td>
+                <td class="text-end text-nowrap">
+                    <form asp-action="SetRecommended" method="post" class="d-inline">
+                        <input type="hidden" name="id" value="@product.Id" />
+                        <input type="hidden" name="value" value="@(!product.IsRecommended)" />
+                        <input type="hidden" name="returnUrl" value="@currentUrl" />
+                        <button type="submit" class="btn btn-sm btn-outline-success" title="GoodBad-anbefaling">
+                            @(product.IsRecommended ? "Fjern ★" : "★ Anbefal")
+                        </button>
+                    </form>
+                    <form asp-action="SetHidden" method="post" class="d-inline">
+                        <input type="hidden" name="id" value="@product.Id" />
+                        <input type="hidden" name="value" value="@(!product.IsHidden)" />
+                        <input type="hidden" name="returnUrl" value="@currentUrl" />
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                            @(product.IsHidden ? "Vis" : "Skjul")
+                        </button>
+                    </form>
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@product.Id">Rediger</a>
+                    <form asp-action="Delete" asp-route-id="@product.Id" method="post" class="d-inline" onsubmit="return confirm('Slet @product.Name og alle anmeldelser?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Slet</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@if (totalPages > 1)
+{
+    <nav>
+        <ul class="pagination pagination-sm">
+            @for (var i = 1; i <= totalPages; i++)
+            {
+                <li class="page-item @(i == page ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-q="@ViewBag.Query" asp-route-filter="@filter">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}

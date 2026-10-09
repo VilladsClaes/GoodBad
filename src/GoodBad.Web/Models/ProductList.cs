@@ -31,6 +31,9 @@ public class ProductList
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    /// <summary>Hidden by a moderator. Hidden lists are excluded from all public views.</summary>
+    public bool IsHidden { get; set; }
+
     public ICollection<ProductListItem> Items { get; set; } = new List<ProductListItem>();
 }
 

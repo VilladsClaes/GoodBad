@@ -44,7 +44,7 @@ public class CategoriesController : Controller
         {
             Category = category,
             Products = await _db.Products
-                .Where(p => ids.Contains(p.CategoryId))
+                .Where(p => !p.IsHidden && ids.Contains(p.CategoryId))
                 .OrderByDescending(p => p.IsRecommended)
                 .ThenByDescending(p => p.Reviews.Count)
                 .ThenBy(p => p.Name)
@@ -67,8 +67,9 @@ public class CategoriesController : Controller
                 .ToListAsync(),
             Lists = await _db.ProductLists
                 .Include(l => l.Items)
-                .Where(l => l.CategoryId == category.Id ||
-                            (l.Category != null && l.Category.ParentId == category.Id))
+                .Where(l => !l.IsHidden &&
+                            (l.CategoryId == category.Id ||
+                             (l.Category != null && l.Category.ParentId == category.Id)))
                 .OrderBy(l => l.Name)
                 .ToListAsync()
         };

@@ -1,0 +1,83 @@
+@model List<Fix>
+@{
+    ViewData["Title"] = "Fixes";
+    var page = (int)ViewBag.Page;
+    var totalPages = (int)ViewBag.TotalPages;
+    var filter = (string?)ViewBag.Filter;
+    var currentUrl = Context.Request.Path + Context.Request.QueryString;
+}
+
+<h1 class="h3 mb-3">Fixes <span class="text-muted fs-6">(@ViewBag.Total)</span></h1>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-sm-5"><input type="search" name="q" value="@ViewBag.Query" class="form-control form-control-sm" placeholder="Søg i fix eller produkt" /></div>
+    <div class="col-sm-4">
+        <select name="filter" class="form-select form-select-sm">
+            <option value="">Alle</option>
+            <option value="user" selected="@(filter == "user")">Fra brugere</option>
+            <option value="system" selected="@(filter == "system")">Systemforslag</option>
+            <option value="hidden" selected="@(filter == "hidden")">Skjulte</option>
+        </select>
+    </div>
+    <div class="col-sm-3"><button class="btn btn-sm btn-outline-secondary w-100">Filtrér</button></div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-sm align-middle bg-white">
+        <thead><tr><th>Produkt</th><th>Fix</th><th>Kilde</th><th>Stemmer</th><th>Dato</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var fix in Model)
+        {
+            <tr class="@(fix.IsHidden ? "table-secondary" : "")">
+                <td><a asp-area="" asp-controller="Products" asp-action="Details" asp-route-slug="@fix.Product.Slug">@fix.Product.Name</a></td>
+                <td class="small">
+                    @fix.Title
+                    @if (!string.IsNullOrWhiteSpace(fix.SourceUrl))
+                    {
+                        <a href="@fix.SourceUrl" target="_blank" rel="noopener" class="ms-1">&#8599;</a>
+                    }
+                </td>
+                <td>
+                    @if (fix.Source == FixSource.System)
+                    {
+                        <span class="badge bg-info text-dark">System</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-light text-dark">Bruger</span>
+                    }
+                    @if (fix.SourceKind is not null)
+                    {
+                        <span class="text-muted small">@fix.SourceKind</span>
+                    }
+                </td>
+                <td>@fix.Votes.Count</td>
+                <td class="small text-muted">@fix.CreatedAt.ToLocalTime().ToString("dd/MM/yy")</td>
+                <td class="text-end text-nowrap">
+                    <form asp-action="SetHidden" method="post" class="d-inline">
+                        <input type="hidden" name="id" value="@fix.Id" />
+                        <input type="hidden" name="value" value="@(!fix.IsHidden)" />
+                        <input type="hidden" name="returnUrl" value="@currentUrl" />
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">@(fix.IsHidden ? "Vis" : "Skjul")</button>
+                    </form>
+                    <form asp-action="Delete" asp-route-id="@fix.Id" method="post" class="d-inline" onsubmit="return confirm('Slet forslaget?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Slet</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@if (totalPages > 1)
+{
+    <nav><ul class="pagination pagination-sm">
+        @for (var i = 1; i <= totalPages; i++)
+        {
+            <li class="page-item @(i == page ? "active" : "")">
+                <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-q="@ViewBag.Query" asp-route-filter="@filter">@i</a>
+            </li>
+        }
+    </ul></nav>
+}

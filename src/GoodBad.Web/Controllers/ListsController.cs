@@ -26,6 +26,7 @@ public class ListsController : Controller
             .Include(l => l.Category)
             .Include(l => l.Items)
             .Include(l => l.Owner)
+            .Where(l => !l.IsHidden)
             .OrderByDescending(l => l.IsEditorial)
             .ThenBy(l => l.Name)
             .ToListAsync();
@@ -39,7 +40,7 @@ public class ListsController : Controller
             .Include(l => l.Owner)
             .Include(l => l.Items).ThenInclude(i => i.Product).ThenInclude(p => p.Brand)
             .Include(l => l.Items).ThenInclude(i => i.Product).ThenInclude(p => p.Category)
-            .FirstOrDefaultAsync(l => l.Slug == slug);
+            .FirstOrDefaultAsync(l => l.Slug == slug && !l.IsHidden);
 
         if (list is null)
         {

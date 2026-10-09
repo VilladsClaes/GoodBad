@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace GoodBad.Web.ViewModels;
 
@@ -23,6 +24,10 @@ public class ProductCreateViewModel
     [MaxLength(600)]
     [Display(Name = "Billede-URL")]
     public string? ImageUrl { get; set; }
+
+    /// <summary>Photo taken with the camera or picked from the gallery.</summary>
+    [Display(Name = "Billede")]
+    public IFormFile? ImageFile { get; set; }
 
     [MaxLength(4000)]
     [Display(Name = "Beskrivelse")]

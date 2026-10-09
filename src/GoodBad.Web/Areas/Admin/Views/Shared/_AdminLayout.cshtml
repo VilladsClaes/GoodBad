@@ -1,0 +1,69 @@
+@{
+    var displayName = User.FindFirst("DisplayName")?.Value ?? User.Identity?.Name;
+}
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - GoodBad Admin</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+            Good<span class="text-success">Bad</span> <span class="badge bg-secondary align-middle">Admin</span>
+        </a>
+        <div class="d-flex align-items-center gap-3">
+            <a class="text-light small" asp-area="" asp-controller="Home" asp-action="Index" target="_blank">Se sitet &#8599;</a>
+            <span class="text-light small">@displayName</span>
+            <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-light">Log ud</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <aside class="col-lg-2 admin-sidebar py-3">
+            <nav class="nav flex-column">
+                <a class="nav-link" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Overblik</a>
+                <div class="admin-nav-group">Katalog</div>
+                <a class="nav-link" asp-area="Admin" asp-controller="Categories" asp-action="Index">Kategorier</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Aspects" asp-action="Index">Problemer &amp; styrker</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Brands" asp-action="Index">Brands</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Products" asp-action="Index">Produkter</a>
+                <div class="admin-nav-group">Indhold</div>
+                <a class="nav-link" asp-area="Admin" asp-controller="Reviews" asp-action="Index">Anmeldelser</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Fixes" asp-action="Index">Fixes</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Recommendations" asp-action="Index">Køb dette i stedet</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Lists" asp-action="Index">Indkøbslister</a>
+                <div class="admin-nav-group">Opsætning</div>
+                <a class="nav-link" asp-area="Admin" asp-controller="FixRules" asp-action="Index">Fix-regler</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Users" asp-action="Index">Brugere</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Settings" asp-action="Index">Indstillinger</a>
+            </nav>
+        </aside>
+        <main class="col-lg-10 py-3">
+            @if (TempData["Success"] is string success)
+            {
+                <div class="alert alert-success alert-dismissible fade show">@success<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+            }
+            @if (TempData["Error"] is string error)
+            {
+                <div class="alert alert-danger alert-dismissible fade show">@error<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+            }
+            @RenderBody()
+        </main>
+    </div>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/image-picker.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

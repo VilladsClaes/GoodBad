@@ -52,6 +52,9 @@ public class Fix
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    /// <summary>Hidden by a moderator (bad link, spam, wrong solution).</summary>
+    public bool IsHidden { get; set; }
+
     public ICollection<FixVote> Votes { get; set; } = new List<FixVote>();
 }
 

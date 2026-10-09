@@ -24,6 +24,15 @@
 
         <p class="mt-2 mb-3" style="white-space: pre-line">@Model.Body</p>
 
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <div class="mb-3">
+                <a href="@Model.ImageUrl" target="_blank" rel="noopener">
+                    <img src="@Model.ImageUrl" alt="Billede fra anmeldelsen" class="review-photo" loading="lazy" />
+                </a>
+            </div>
+        }
+
         @if (Model.Aspects.Any())
         {
             <div class="mb-3">

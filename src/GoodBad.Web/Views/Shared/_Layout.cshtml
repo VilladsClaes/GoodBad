@@ -1,14 +1,17 @@
+@inject GoodBad.Web.Services.SiteSettingsService SettingsService
 @{
     var displayName = User.Identity?.IsAuthenticated == true
         ? (User.FindFirst("DisplayName")?.Value ?? User.Identity!.Name)
         : null;
+    var siteTitle = await SettingsService.GetAsync(GoodBad.Web.Services.SettingKeys.SiteTitle) ?? "GoodBad";
+    var isAdmin = User.IsInRole(GoodBad.Web.Services.Roles.Admin);
 }
 <!DOCTYPE html>
 <html lang="da">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - GoodBad</title>
+    <title>@ViewData["Title"] - @siteTitle</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
@@ -35,6 +38,10 @@
                     <button class="btn btn-sm btn-outline-light" type="submit">Søg</button>
                 </form>
                 <ul class="navbar-nav">
+                    @if (isAdmin)
+                    {
+                        <li class="nav-item"><a class="nav-link text-warning fw-semibold" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Admin</a></li>
+                    }
                     @if (User.Identity?.IsAuthenticated == true)
                     {
                         <li class="nav-item"><a class="nav-link" asp-controller="Products" asp-action="Create">+ Produkt</a></li>
@@ -75,7 +82,7 @@
 
 <footer class="border-top footer text-muted py-4">
     <div class="container d-flex flex-wrap justify-content-between">
-        <span>GoodBad &copy; @DateTime.Now.Year &ndash; køb bedre, køb sjældnere.</span>
+        <span>@siteTitle &copy; @DateTime.Now.Year &ndash; køb bedre, køb sjældnere.</span>
         <span>
             <a asp-controller="Home" asp-action="About">Om GoodBad</a> &middot;
             <a asp-controller="Home" asp-action="Privacy">Privatliv</a>
@@ -85,6 +92,7 @@
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
+<script src="~/js/image-picker.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

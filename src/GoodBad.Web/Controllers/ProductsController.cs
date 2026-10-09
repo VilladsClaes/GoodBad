@@ -13,16 +13,18 @@ public class ProductsController : Controller
 {
     private readonly AppDbContext _db;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ImageStorageService _images;
 
-    public ProductsController(AppDbContext db, UserManager<ApplicationUser> userManager)
+    public ProductsController(AppDbContext db, UserManager<ApplicationUser> userManager, ImageStorageService images)
     {
         _db = db;
         _userManager = userManager;
+        _images = images;
     }
 
     public async Task<IActionResult> Index(string? q, int? categoryId, string? sort)
     {
-        var query = _db.Products.AsQueryable();
+        var query = _db.Products.Where(p => !p.IsHidden);
 
         if (!string.IsNullOrWhiteSpace(q))
         {
@@ -71,28 +73,29 @@ public class ProductsController : Controller
             .Include(p => p.Reviews).ThenInclude(r => r.Aspects).ThenInclude(a => a.Votes)
             .Include(p => p.Reviews).ThenInclude(r => r.Votes)
             .AsSplitQuery()
-            .FirstOrDefaultAsync(p => p.Slug == slug);
+            .FirstOrDefaultAsync(p => p.Slug == slug && !p.IsHidden);
 
         if (product is null)
         {
             return NotFound();
         }
 
-        var aspectIds = product.Reviews.SelectMany(r => r.Aspects).Select(a => a.Id).ToList();
+        var visibleReviews = product.Reviews.Where(r => !r.IsHidden).ToList();
+        var aspectIds = visibleReviews.SelectMany(r => r.Aspects).Select(a => a.Id).ToList();
         var aspectVotes = await _db.ReviewAspectVotes
             .Where(v => aspectIds.Contains(v.ReviewAspectId))
             .Select(v => v.ReviewAspectId)
             .ToListAsync();
 
-        var allAspects = product.Reviews.SelectMany(r => r.Aspects).ToList();
+        var allAspects = visibleReviews.SelectMany(r => r.Aspects).ToList();
 
         var model = new ProductDetailsViewModel
         {
             Product = product,
-            GoodReviews = product.Reviews.Where(r => r.Verdict == Verdict.Good).OrderByDescending(r => r.Votes.Count(v => v.IsAgree)).ThenByDescending(r => r.CreatedAt).ToList(),
-            BadReviews = product.Reviews.Where(r => r.Verdict == Verdict.Bad).OrderByDescending(r => r.Votes.Count(v => v.IsAgree)).ThenByDescending(r => r.CreatedAt).ToList(),
-            GoodCount = product.Reviews.Count(r => r.Verdict == Verdict.Good),
-            BadCount = product.Reviews.Count(r => r.Verdict == Verdict.Bad),
+            GoodReviews = product.Reviews.Where(r => !r.IsHidden && r.Verdict == Verdict.Good).OrderByDescending(r => r.Votes.Count(v => v.IsAgree)).ThenByDescending(r => r.CreatedAt).ToList(),
+            BadReviews = product.Reviews.Where(r => !r.IsHidden && r.Verdict == Verdict.Bad).OrderByDescending(r => r.Votes.Count(v => v.IsAgree)).ThenByDescending(r => r.CreatedAt).ToList(),
+            GoodCount = product.Reviews.Count(r => !r.IsHidden && r.Verdict == Verdict.Good),
+            BadCount = product.Reviews.Count(r => !r.IsHidden && r.Verdict == Verdict.Bad),
 
             TopProblems = allAspects
                 .Where(a => a.Aspect.Kind == AspectKind.Problem)
@@ -124,14 +127,14 @@ public class ProductsController : Controller
 
             AppearsInLists = await _db.ProductLists
                 .Include(l => l.Category)
-                .Where(l => l.Items.Any(i => i.ProductId == product.Id))
+                .Where(l => !l.IsHidden && l.Items.Any(i => i.ProductId == product.Id))
                 .ToListAsync(),
 
             Fixes = await _db.Fixes
                 .Include(f => f.User)
                 .Include(f => f.Votes)
                 .Include(f => f.Review)
-                .Where(f => f.ProductId == product.Id)
+                .Where(f => f.ProductId == product.Id && !f.IsHidden)
                 .OrderByDescending(f => f.Votes.Count)
                 .ThenByDescending(f => f.CreatedAt)
                 .ToListAsync()
@@ -203,11 +206,19 @@ public class ProductsController : Controller
             return View(model);
         }
 
+        var (uploadedImageUrl, imageError) = await _images.SaveAsync(model.ImageFile, "products");
+        if (imageError is not null)
+        {
+            ModelState.AddModelError(nameof(model.ImageFile), imageError);
+            await PopulateSelectListsAsync();
+            return View(model);
+        }
+
         var product = new Product
         {
             Name = model.Name.Trim(),
             Description = model.Description,
-            ImageUrl = model.ImageUrl,
+            ImageUrl = uploadedImageUrl ?? model.ImageUrl,
             ModelNumber = model.ModelNumber,
             CategoryId = model.CategoryId,
             BrandId = model.BrandId,

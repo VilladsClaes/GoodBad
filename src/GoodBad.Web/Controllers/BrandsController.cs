@@ -33,7 +33,7 @@ public class BrandsController : Controller
             return NotFound();
         }
 
-        var products = await _db.Products.Where(p => p.BrandId == brand.Id).ToCards().ToListAsync();
+        var products = await _db.Products.Where(p => !p.IsHidden && p.BrandId == brand.Id).ToCards().ToListAsync();
 
         var model = new BrandDetailsViewModel
         {

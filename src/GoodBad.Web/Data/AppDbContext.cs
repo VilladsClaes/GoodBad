@@ -25,10 +25,17 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ProductList> ProductLists => Set<ProductList>();
     public DbSet<ProductListItem> ProductListItems => Set<ProductListItem>();
     public DbSet<ProductRecommendation> ProductRecommendations => Set<ProductRecommendation>();
+    public DbSet<SiteSetting> SiteSettings => Set<SiteSetting>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        // utf8mb4_unicode_ci is the collation Simply.com recommends and it exists
+        // on both MySQL 8 and MariaDB (unlike MySQL 8's built-in 0900 collations).
+        builder.UseCollation("utf8mb4_unicode_ci");
+
+        builder.Entity<SiteSetting>().HasIndex(s => s.Key).IsUnique();
 
         builder.Entity<Category>()
             .HasIndex(c => c.Slug).IsUnique();

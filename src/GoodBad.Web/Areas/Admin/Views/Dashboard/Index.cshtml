@@ -1,0 +1,121 @@
+@model AdminDashboardViewModel
+@{ ViewData["Title"] = "Overblik"; }
+
+<h1 class="h3 mb-3">Overblik</h1>
+
+@if (!Model.YouTubeConfigured)
+{
+    <div class="alert alert-warning">
+        <strong>YouTube Data API-nøglen mangler.</strong>
+        Fix-motoren viser kun links til YouTube-søgninger indtil du indsætter en nøgle.
+        <a asp-controller="Settings" asp-action="Index" class="alert-link">Sæt nøglen under Indstillinger</a>.
+    </div>
+}
+@if (!Model.RedditConfigured)
+{
+    <div class="alert alert-warning">
+        <strong>Reddit-legitimationsoplysninger mangler.</strong>
+        Reddit afviser anonym søgning fra webhoteller (HTTP 403), så fix-motoren viser kun søgelinks.
+        Opret en gratis app på <a href="https://www.reddit.com/prefs/apps" target="_blank" rel="noopener" class="alert-link">reddit.com/prefs/apps</a>
+        og indsæt Client ID + Client Secret under <a asp-controller="Settings" asp-action="Index" class="alert-link">Indstillinger</a> –
+        så kommer der rigtige Reddit-tråde ind.
+    </div>
+}
+@if (Model.AdminCount == 1)
+{
+    <div class="alert alert-info">
+        Der er kun <strong>én</strong> administrator. Tilføj din egen e-mail under
+        <code>Admin:Emails</code> i <code>appsettings.Production.json</code>, eller giv en anden bruger rollen under
+        <a asp-controller="Users" asp-action="Index" class="alert-link">Brugere</a>.
+    </div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="admin-stat">
+            <span class="admin-stat-value">@Model.ProductCount</span>
+            <span class="admin-stat-label">Produkter</span>
+            <span class="text-muted small">@Model.HiddenProductCount skjulte</span>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="admin-stat">
+            <span class="admin-stat-value">@Model.ReviewCount</span>
+            <span class="admin-stat-label">Anmeldelser</span>
+            <span class="text-muted small">@Model.HiddenReviewCount skjulte</span>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="admin-stat">
+            <span class="admin-stat-value">@Model.FixCount</span>
+            <span class="admin-stat-label">Fixes</span>
+            <span class="text-muted small">@Model.HiddenFixCount skjulte</span>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="admin-stat">
+            <span class="admin-stat-value">@Model.UserCount</span>
+            <span class="admin-stat-label">Brugere</span>
+            <span class="text-muted small">@Model.AdminCount administratorer</span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-2"><a class="admin-tile" asp-controller="Categories" asp-action="Index"><strong>@Model.CategoryCount</strong><span>Kategorier</span></a></div>
+    <div class="col-6 col-lg-2"><a class="admin-tile" asp-controller="Aspects" asp-action="Index"><strong>@Model.AspectCount</strong><span>Aspekter</span></a></div>
+    <div class="col-6 col-lg-2"><a class="admin-tile" asp-controller="Brands" asp-action="Index"><strong>@Model.BrandCount</strong><span>Brands</span></a></div>
+    <div class="col-6 col-lg-2"><a class="admin-tile" asp-controller="FixRules" asp-action="Index"><strong>@Model.RuleCount</strong><span>Fix-regler</span></a></div>
+    <div class="col-6 col-lg-2"><a class="admin-tile" asp-controller="Recommendations" asp-action="Index"><strong>@Model.RecommendationCount</strong><span>Anbefalinger</span></a></div>
+    <div class="col-6 col-lg-2"><a class="admin-tile" asp-controller="Lists" asp-action="Index"><strong>@Model.ListCount</strong><span>Lister</span></a></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <h2 class="h5">Nyeste anmeldelser</h2>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle bg-white">
+                <thead><tr><th>Produkt</th><th>Dom</th><th>Bruger</th><th>Dato</th><th></th></tr></thead>
+                <tbody>
+                @foreach (var review in Model.LatestReviews)
+                {
+                    <tr>
+                        <td><a asp-area="" asp-controller="Products" asp-action="Details" asp-route-slug="@review.Product.Slug">@review.Product.Name</a></td>
+                        <td>
+                            @if (review.Verdict == Verdict.Good)
+                            {
+                                <span class="badge bg-success">God</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Dårlig</span>
+                            }
+                        </td>
+                        <td>@(review.User?.DisplayName ?? review.User?.Email ?? "–")</td>
+                        <td class="text-muted small">@review.CreatedAt.ToLocalTime().ToString("dd/MM HH:mm")</td>
+                        <td><a class="btn btn-sm btn-outline-secondary" asp-controller="Reviews" asp-action="Index">Se</a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <h2 class="h5">Nyeste brugere</h2>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle bg-white">
+                <thead><tr><th>Navn</th><th>E-mail</th><th>Oprettet</th></tr></thead>
+                <tbody>
+                @foreach (var user in Model.LatestUsers)
+                {
+                    <tr>
+                        <td>@(user.DisplayName ?? "–")</td>
+                        <td class="text-muted small">@user.Email</td>
+                        <td class="text-muted small">@user.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

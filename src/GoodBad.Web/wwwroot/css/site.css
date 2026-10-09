@@ -223,3 +223,82 @@ a:hover {
 .aspect-picker input:checked + span {
     font-weight: 700;
 }
+
+/* --- Image picker -------------------------------------------------- */
+.image-picker .admin-image-preview,
+.image-picker img.admin-image-preview,
+.image-picker .image-preview {
+    max-height: 160px;
+    max-width: 100%;
+    border-radius: .5rem;
+    border: 1px solid #dfe3e8;
+}
+
+/* --- Admin --------------------------------------------------------- */
+.admin-sidebar {
+    background: #fff;
+    border-right: 1px solid #e3e7ec;
+    min-height: calc(100vh - 56px);
+}
+
+.admin-sidebar .nav-link {
+    color: #33404d;
+    border-radius: .4rem;
+    padding: .35rem .6rem;
+}
+
+.admin-sidebar .nav-link:hover {
+    background: #f0f3f6;
+}
+
+.admin-nav-group {
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #8b97a3;
+    margin: 1rem .6rem .25rem;
+}
+
+.admin-stat,
+.admin-tile {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid #e3e7ec;
+    border-radius: .75rem;
+    padding: 1rem;
+    text-decoration: none;
+    color: var(--ink);
+}
+
+.admin-tile {
+    align-items: center;
+    text-align: center;
+}
+
+.admin-tile:hover {
+    border-color: #b9c6d2;
+    color: var(--ink);
+}
+
+.admin-stat-value,
+.admin-tile strong {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.admin-stat-label,
+.admin-tile span {
+    font-size: .85rem;
+    color: #6b7683;
+}
+
+/* Photo attached to a review (camera / camera roll / Google Photos). */
+.review-photo {
+    max-height: 320px;
+    max-width: 100%;
+    border: 1px solid #e3e7ec;
+    border-radius: .6rem;
+    object-fit: cover;
+}

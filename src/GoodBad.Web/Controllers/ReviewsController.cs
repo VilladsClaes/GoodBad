@@ -14,12 +14,18 @@ public class ReviewsController : Controller
     private readonly AppDbContext _db;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly FixSuggestionService _suggestions;
+    private readonly ImageStorageService _images;
 
-    public ReviewsController(AppDbContext db, UserManager<ApplicationUser> userManager, FixSuggestionService suggestions)
+    public ReviewsController(
+        AppDbContext db,
+        UserManager<ApplicationUser> userManager,
+        FixSuggestionService suggestions,
+        ImageStorageService images)
     {
         _db = db;
         _userManager = userManager;
         _suggestions = suggestions;
+        _images = images;
     }
 
     /// <summary>Creates a review and lets the system look for fixes in the keywords used.</summary>
@@ -28,7 +34,7 @@ public class ReviewsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ReviewCreateViewModel model)
     {
-        var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == model.ProductId);
+        var product = await _db.Products.Include(p => p.Category).FirstOrDefaultAsync(p => p.Id == model.ProductId);
         if (product is null)
         {
             return NotFound();
@@ -40,6 +46,15 @@ public class ReviewsController : Controller
             return RedirectToProduct(product.Slug);
         }
 
+        // Optional photo of the product: an upload from the camera / camera
+        // roll / Google Photos, or a plain image link.
+        var (uploadedImage, imageError) = await _images.SaveAsync(model.ImageFile, "reviews");
+        if (imageError is not null)
+        {
+            TempData["Error"] = imageError;
+            return RedirectToProduct(product.Slug);
+        }
+
         var review = new Review
         {
             ProductId = product.Id,
@@ -47,7 +62,8 @@ public class ReviewsController : Controller
             Verdict = model.Verdict.Value,
             Title = model.Title.Trim(),
             Body = model.Body.Trim(),
-            OwnershipDuration = model.OwnershipDuration
+            OwnershipDuration = model.OwnershipDuration,
+            ImageUrl = uploadedImage ?? Truncate(model.ImageUrl, 600)
         };
 
         if (model.SelectedAspectIds.Count > 0)
@@ -67,7 +83,7 @@ public class ReviewsController : Controller
 
         // The system scans what the user wrote for keywords and proposes
         // YouTube tutorials / Reddit threads that might fix the problem.
-        var suggestions = await _suggestions.SuggestAsync($"{review.Title} {review.Body}", 4);
+        var suggestions = await _suggestions.SuggestAsync($"{review.Title} {review.Body}", 6, product.Category.Name);
         if (suggestions.Count > 0)
         {
             foreach (var suggestion in suggestions)
@@ -79,7 +95,7 @@ public class ReviewsController : Controller
                     Source = FixSource.System,
                     SourceKind = suggestion.Kind,
                     Title = suggestion.Title,
-                    Body = $"Systemforslag fundet ud fra dine ord om \u201c{suggestion.MatchedKeyword}\u201d.",
+                    Body = suggestion.Body ?? $"Systemforslag fundet ud fra dine ord om \u201c{suggestion.MatchedKeyword}\u201d.",
                     SourceUrl = suggestion.Url
                 });
             }
@@ -97,7 +113,7 @@ public class ReviewsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Vote(int id, bool agree = true)
     {
-        var review = await _db.Reviews.Include(r => r.Product).FirstOrDefaultAsync(r => r.Id == id);
+        var review = await _db.Reviews.Include(r => r.Product).ThenInclude(p => p.Category).FirstOrDefaultAsync(r => r.Id == id);
         if (review is null)
         {
             return NotFound();
@@ -161,7 +177,7 @@ public class ReviewsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RefreshSuggestions(int id)
     {
-        var review = await _db.Reviews.Include(r => r.Product).FirstOrDefaultAsync(r => r.Id == id);
+        var review = await _db.Reviews.Include(r => r.Product).ThenInclude(p => p.Category).FirstOrDefaultAsync(r => r.Id == id);
         if (review is null)
         {
             return NotFound();
@@ -172,7 +188,7 @@ public class ReviewsController : Controller
             .Select(f => f.SourceUrl)
             .ToListAsync();
 
-        var suggestions = await _suggestions.SuggestAsync($"{review.Title} {review.Body}", 6);
+        var suggestions = await _suggestions.SuggestAsync($"{review.Title} {review.Body}", 6, review.Product.Category.Name);
         var added = 0;
         foreach (var suggestion in suggestions)
         {
@@ -188,7 +204,7 @@ public class ReviewsController : Controller
                 Source = FixSource.System,
                 SourceKind = suggestion.Kind,
                 Title = suggestion.Title,
-                Body = $"Systemforslag fundet ud fra dine ord om \u201c{suggestion.MatchedKeyword}\u201d.",
+                Body = suggestion.Body ?? $"Systemforslag fundet ud fra dine ord om \u201c{suggestion.MatchedKeyword}\u201d.",
                 SourceUrl = suggestion.Url
             });
             added++;
@@ -199,6 +215,17 @@ public class ReviewsController : Controller
             ? $"{added} nye forslag blev fundet."
             : "Der blev ikke fundet nye forslag.";
         return RedirectToProduct(review.Product.Slug);
+    }
+
+    private static string? Truncate(string? value, int max)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        return trimmed.Length <= max ? trimmed : trimmed[..max];
     }
 
     private IActionResult RedirectToProduct(string slug)

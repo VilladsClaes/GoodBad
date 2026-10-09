@@ -37,6 +37,11 @@ public class Product
     /// <summary>Set by GoodBad editors to showcase truly durable products on the front page.</summary>
     public bool IsRecommended { get; set; }
 
+    /// <summary>Hidden by a moderator (spam, duplicate, offensive). Not shown publicly.</summary>
+    public bool IsHidden { get; set; }
+
+    public DateTime? UpdatedAt { get; set; }
+
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
     public ICollection<Fix> Fixes { get; set; } = new List<Fix>();
     public ICollection<ProductListItem> ListItems { get; set; } = new List<ProductListItem>();

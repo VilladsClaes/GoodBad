@@ -1,0 +1,60 @@
+@model List<ProductRecommendation>
+@{
+    ViewData["Title"] = "Køb dette i stedet";
+    var products = (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Products;
+}
+
+<h1 class="h3 mb-3">“Du skulle have købt dette i stedet”</h1>
+
+<p class="text-muted">
+    Parringer mellem et dårligt produkt og et bedre alternativ. De vises på begge produkters sider:
+    på det dårlige som <em>“Du skulle have købt dette i stedet”</em>, og på det gode som <em>“Godt at du ikke købte dette”</em>.
+</p>
+
+<form asp-action="Create" method="post" class="card card-body shadow-sm mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label">Dårligt produkt</label>
+            <select name="SourceProductId" class="form-select form-select-sm" asp-items="products" required>
+                <option value="">– Vælg –</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Bedre alternativ</label>
+            <select name="AlternativeProductId" class="form-select form-select-sm" asp-items="products" required>
+                <option value="">– Vælg –</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Begrundelse</label>
+            <input name="Reason" class="form-control form-control-sm" placeholder="Holder i mange år" />
+        </div>
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-sm btn-success w-100">Tilføj</button>
+        </div>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-sm align-middle bg-white">
+        <thead><tr><th>Dårligt produkt</th><th></th><th>Bedre alternativ</th><th>Begrundelse</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var recommendation in Model)
+        {
+            <tr>
+                <td><a asp-area="" asp-controller="Products" asp-action="Details" asp-route-slug="@recommendation.SourceProduct.Slug">@recommendation.SourceProduct.Name</a>
+                    <span class="text-muted small">@recommendation.SourceProduct.Brand?.Name</span></td>
+                <td class="text-center">&#8594;</td>
+                <td><a asp-area="" asp-controller="Products" asp-action="Details" asp-route-slug="@recommendation.AlternativeProduct.Slug">@recommendation.AlternativeProduct.Name</a>
+                    <span class="text-muted small">@recommendation.AlternativeProduct.Brand?.Name</span></td>
+                <td class="text-muted small">@recommendation.Reason</td>
+                <td class="text-end">
+                    <form asp-action="Delete" asp-route-id="@recommendation.Id" method="post" onsubmit="return confirm('Slet parringen?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Slet</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

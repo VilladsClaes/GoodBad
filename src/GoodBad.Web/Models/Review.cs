@@ -37,8 +37,19 @@ public class Review
     [MaxLength(120)]
     public string? OwnershipDuration { get; set; }
 
+    /// <summary>
+    /// Photo of the product taken by the reviewer. Either a path to a file
+    /// stored under /uploads (uploaded from camera / camera roll / Google
+    /// Photos) or a full external URL.
+    /// </summary>
+    [MaxLength(600)]
+    public string? ImageUrl { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>Hidden by a moderator. Hidden reviews are excluded from all public views.</summary>
+    public bool IsHidden { get; set; }
 
     public ICollection<ReviewAspect> Aspects { get; set; } = new List<ReviewAspect>();
     public ICollection<ReviewVote> Votes { get; set; } = new List<ReviewVote>();

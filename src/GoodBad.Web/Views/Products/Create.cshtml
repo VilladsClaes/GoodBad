@@ -9,7 +9,7 @@
 
 <div class="row">
     <div class="col-lg-7">
-        <form asp-action="Create" method="post" class="card p-4">
+        <form asp-action="Create" method="post" enctype="multipart/form-data" class="card p-4">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="mb-3">
@@ -42,16 +42,20 @@
                 </select>
             </div>
 
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label asp-for="ModelNumber" class="form-label"></label>
-                    <input asp-for="ModelNumber" class="form-control" />
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label asp-for="ImageUrl" class="form-label"></label>
-                    <input asp-for="ImageUrl" class="form-control" placeholder="https://…" />
-                    <div class="form-text">Tag et billede af produktet og indsæt et link.</div>
-                </div>
+            <div class="mb-3">
+                <label asp-for="ModelNumber" class="form-label"></label>
+                <input asp-for="ModelNumber" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <partial name="_ImagePicker" model="@(new ImagePickerModel
+                {
+                    FileField = "ImageFile",
+                    UrlField = "ImageUrl",
+                    CurrentUrl = Model.ImageUrl,
+                    Label = "Produktbillede",
+                    Hint = "Tag et billede med kameraet, vælg fra kamerarullen/Google Photos, eller indsæt et link."
+                })" />
             </div>
 
             <div class="mb-3">

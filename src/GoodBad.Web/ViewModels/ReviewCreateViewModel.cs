@@ -26,6 +26,15 @@ public class ReviewCreateViewModel
     [Display(Name = "Hvor længe har du haft produktet?")]
     public string? OwnershipDuration { get; set; }
 
+    /// <summary>Photo uploaded from the camera, camera roll or Google Photos.</summary>
+    [Display(Name = "Billede af produktet")]
+    public IFormFile? ImageFile { get; set; }
+
+    /// <summary>Alternative: a link to a photo somewhere else.</summary>
+    [MaxLength(600)]
+    [Display(Name = "Billedlink")]
+    public string? ImageUrl { get; set; }
+
     /// <summary>Selected aspect ids (defects for a bad verdict, strengths for a good one).</summary>
     public List<int> SelectedAspectIds { get; set; } = new();
 
