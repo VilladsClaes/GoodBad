@@ -7,6 +7,11 @@ using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Hemmeligheder (connection string, API-nøgler) i appsettings.<Miljø>.local.json.
+// Filen er git-ignoreret, men publiceres med til webhotellet.
+builder.Configuration.AddJsonFile(
+    $"appsettings.{builder.Environment.EnvironmentName}.local.json", optional: true, reloadOnChange: true);
+
 // ---------------------------------------------------------------------------
 // Database: MySQL (the database type available on Simply.com). The connection
 // string is read from appsettings.Production.json, from an environment
