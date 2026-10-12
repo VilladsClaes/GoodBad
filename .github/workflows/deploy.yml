@@ -1,0 +1,77 @@
+# Udgiver GoodBad til goodbad.villadsclaes.dk (Simply.com) ved hvert push til main.
+#
+# Kræver to repository secrets (Settings -> Secrets and variables -> Actions):
+#   WEBDEPLOY_PASSWORD             Web Deploy/FTP-adgangskoden fra Simplys kontrolpanel
+#   APPSETTINGS_PRODUCTION_LOCAL   Hele indholdet af appsettings.Production.local.json
+#                                  (connection string + admin-e-mail)
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  test:
+    # UploadLocationTests bruger Unix-filrettigheder, så testene køres på Linux.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet test -c Release
+
+  deploy:
+    # Web Deploy (MSDeploy) findes kun til Windows.
+    needs: test
+    runs-on: windows-latest
+    environment:
+      name: production
+      url: https://goodbad.villadsclaes.dk
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Installér Web Deploy
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "$env:ProgramFiles\IIS\Microsoft Web Deploy V3\msdeploy.exe")) {
+            choco install webdeploy -y --no-progress
+          }
+
+      - name: Skriv produktionshemmeligheder
+        shell: pwsh
+        env:
+          APPSETTINGS: ${{ secrets.APPSETTINGS_PRODUCTION_LOCAL }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:APPSETTINGS)) { throw "Secret APPSETTINGS_PRODUCTION_LOCAL mangler" }
+          Set-Content -Path src/GoodBad.Web/appsettings.Production.local.json -Value $env:APPSETTINGS -Encoding utf8NoBOM
+
+      - name: Publicér til Simply
+        shell: pwsh
+        env:
+          WEBDEPLOY_PASSWORD: ${{ secrets.WEBDEPLOY_PASSWORD }}
+        run: >
+          dotnet publish src/GoodBad.Web/GoodBad.Web.csproj -c Release
+          -p:PublishProfile=SimplyWebDeploy
+          "-p:Password=$env:WEBDEPLOY_PASSWORD"
+
+      - name: Tjek at sitet svarer
+        shell: pwsh
+        run: |
+          $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) GoodBad-deploy-check"
+          for ($i = 1; $i -le 6; $i++) {
+            try {
+              $r = Invoke-WebRequest https://goodbad.villadsclaes.dk/ -UserAgent $ua -TimeoutSec 120
+              if ($r.StatusCode -eq 200) { Write-Host "Sitet svarer 200"; exit 0 }
+            } catch { Write-Host "Forsøg $i fejlede: $($_.Exception.Message)" }
+            Start-Sleep -Seconds 20
+          }
+          throw "Sitet svarer ikke efter deploy"
